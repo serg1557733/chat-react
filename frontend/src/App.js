@@ -1,5 +1,6 @@
 import './App.css';
 import {io} from 'socket.io-client';
+import { Login } from './components/loginForm/LoginForm';
 
 
 
@@ -16,7 +17,6 @@ socket.on("connect", () => {
 });   
 
 
-
 //testing send messages
 const sendMessage = (data) => {
     socket.emit("message", data);
@@ -26,7 +26,7 @@ const sendMessage = (data) => {
 
 
 sendMessage({
-    message: 'some message',
+    message: 'some 24334 message',
     name: 'some name'
 });
 
@@ -35,9 +35,9 @@ sendMessage({
 
 function App() {
   return (
-    <div className="App">
-       <h1>working ...</h1>
-    </div>
+    <>
+       <Login/>
+    </>
   );
 }
 
