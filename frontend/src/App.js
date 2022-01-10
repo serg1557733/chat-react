@@ -4,16 +4,33 @@ import {io} from 'socket.io-client';
 
 
 const SERVER_URL = 'http://localhost:5000';
-
 const socket = io.connect(SERVER_URL);
 
-socket.on('connection', () => {
-  console.log('connected')
+
+
+//connecting with server and get back messages for chat
+socket.on("connect", () => {
+    socket.on('chat_message', (data) => {
+        console.log(data); 
+    }); 
+});   
+
+
+
+//testing send messages
+const sendMessage = (data) => {
+    socket.emit("message", data);
+    console.log(`send `)
+}
+
+
+
+sendMessage({
+    message: 'some message',
+    name: 'some name'
 });
 
-socket.on('conected', () => {
-  console.log('connected to server')
-});
+
 
 
 function App() {
