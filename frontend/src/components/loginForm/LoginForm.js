@@ -4,6 +4,7 @@ import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import { useState } from 'react';
+import { sendForm } from './utils/sendForm';
 
 
 
@@ -11,11 +12,15 @@ export const LoginForm = () => {
 
     const [userData, setUserdata] = useState({userName:'', password: ''});
 
+    const POST_URL = 'http://localhost:5000/login';
+
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log(userData)
+        sendForm(POST_URL, userData);
         setUserdata({userName:'', password: ''});
     }
+
     
     return (
         <Container maxWidth="xs">

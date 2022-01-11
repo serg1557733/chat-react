@@ -8,6 +8,8 @@ const socket = require("socket.io");
 
 const server = http.createServer(app);
 
+
+
 const io = require("socket.io")(server, {
   cors: {
     origin: "http://localhost:3000"  //client endpoint and port
@@ -20,10 +22,22 @@ app.use(cors());// cors
 
 
 
-//main page
+//main test page
 app.get('/', (req, res) => {
   res.send('here will be login page')
 })
+
+
+app.post('/login', (req, res) => {
+    try {
+        const data = req;//need add method for req
+        console.log(data)
+        res.send(JSON.stringify('token..'))
+    } catch (error) {
+        console.log(e)
+    }
+    
+  })
 
 
 
@@ -46,7 +60,16 @@ io.on("connection", (socket) => {
 
 
 //server.listen(PORT);
+const start = () => {
+    try {
+        server.listen(PORT, () => {
+            console.log(`Server started. Port: ${PORT}`)
+        })   
+    } catch (e) {
+        console.log(e)
+    }
 
-server.listen(PORT, () => {
-  console.log(`Server started. Port: ${PORT}`)
-})
+}
+
+start();
+
