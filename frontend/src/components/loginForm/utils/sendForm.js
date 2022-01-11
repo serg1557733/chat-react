@@ -1,16 +1,15 @@
-
 export const sendForm = async (POST_URL, userData) => {
-    try{
+    try {
         const response = await fetch(POST_URL, {
             method: 'POST',
             body: JSON.stringify(userData),
             headers: {
-              'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             }
         });
         const json = await response.json();
         console.log(json);
-    } catch (e){
+    } catch (e) {
         console.log(e)
     }
 }
