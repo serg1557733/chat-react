@@ -25,10 +25,8 @@ app.get('/', (req, res) => {
   res.send('here will be login page')
 })
 
-//login page
-app.get('/chat', (req, res) => {
-  res.send('Chat page')
-})
+
+
 
 //on connection listen messages and send back text and user name in chat
 io.on("connection", (socket) => {

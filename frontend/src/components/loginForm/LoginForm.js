@@ -1,19 +1,31 @@
+
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
-import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
+import { useState } from 'react';
 
 
-export const Login = () => {
+
+export const LoginForm = () => {
+
+    const [userData, setUserdata] = useState({userName:'', password: ''});
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log(userData)
+        setUserdata({userName:'', password: ''});
+    }
+    
     return (
         <Container maxWidth="xs">
             <Box
+            component="form" 
+            onSubmit={(e) => handleSubmit(e)}
             sx={{
                 marginTop: 40,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
             }}
             >
                 <TextField
@@ -25,6 +37,9 @@ export const Login = () => {
                 name="userName"
                 autoComplete="email"
                 autoFocus
+                value={userData.userName}
+                onChange={e => setUserdata({...userData, userName: e.target.value})}
+                
                 />
                 <TextField
                 margin="normal"
@@ -35,8 +50,12 @@ export const Login = () => {
                 type="password"
                 id="password"
                 autoComplete="current-password"
+                value={userData.password}
+                onChange={e => setUserdata({...userData, password: e.target.value})}
+
                 />
                 <Button 
+                type="submit"
                 variant="contained"
                 fullWidth>Login
                 </Button>
