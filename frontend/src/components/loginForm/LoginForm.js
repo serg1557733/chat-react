@@ -16,7 +16,7 @@ export const LoginForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(userData)
+    //    console.log(userData)
         sendForm(POST_URL, userData);
         setUserdata({userName:'', password: ''});
     }

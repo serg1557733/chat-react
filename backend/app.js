@@ -29,27 +29,52 @@ app.get('/', (req, res) => {
 })
 
 
-app.post('/login', jsonParser, (req, res) => {
+// const saveUsersToDb = async (userName, password ) => {
+//     try {
+//         const newUser = new User({ userName, password });
+//         const user = await newUser.save()
+//         res.send(JSON.stringify(user))
+        
+//     } catch (error) {
+//         console.log(error)
+//     }
+// }
+
+
+app.post('/login', jsonParser,async (req, res) => {
     try {
-        console.log(req.body);
         const {userName, password} = req.body;
-      //  const newUser = new User({});
-      //  console.log(newUser);
 
-        //newUser.save();
+        const allUsers = await User.find({}).exec();
+        const isFirst = !allUsers.length;
+        const dbUser = await User.findOne({userName})
 
-        res.send(JSON.stringify('token..'))
-    } catch (error) {
+        if (isFirst){                                      // if first create as admin
+            const newUser = new User({ userName, password, isAdmin: true});
+            const user = await newUser.save();
+            console.log(user);
+            res.send(JSON.stringify(user))
+        } else if(dbUser){        //if find must login
+            console.log('find user - must login it')
+            res.send(JSON.stringify(dbUser)) 
+        } else {   //create new user in db
+            const newUser = new User({ userName, password, isAdmin: false});
+            const user = await newUser.save();
+            console.log(user);
+            res.send(JSON.stringify(user))
+        }
+        
+        //res.send(JSON.stringify(dbUser))
+
+    } catch (e) {
         console.log(e)
     }
 })
 
-
 //on connection listen messages and send back text and user name in chat
 // io.on("connection", (socket) => {
 //     socket.on("message", (data) => {
-//         console.log(data.message); 
-//         io.emit('chat_message',{
+//         console.log(data.message); //         io.emit('chat_message',{
 //             message: data.message,
 //             name: data.name
 //         })
@@ -59,15 +84,11 @@ app.post('/login', jsonParser, (req, res) => {
 // });
 
 
-
-//server.listen
-const start =async () => {
-    try {
-        await mongoose.connect('mongodb://localhost:27017/chat').then(() => console.log(`DB started`))
-            const newUser = new User({ userName: 'admin1', password: 'qweqwe', isAdmin: true });
-            const user = await newUser.save()
-            console.log('user', user)
-            
+//server and database start
+const start = async () => {
+    try { 
+        await mongoose.connect('mongodb://localhost:27017/chat')
+            .then(() => console.log(`DB started`))  
         server.listen(PORT, () => {
             console.log(`Server started. Port: ${PORT}`)
         })   
