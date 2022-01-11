@@ -5,7 +5,7 @@ const cors = require("cors");
 const http = require('http'); //create new http
 const mongoose = require('mongoose');
 const socket = require("socket.io");
-
+const User = require('./db/models/User');
 
 
 const server = http.createServer(app);
@@ -32,6 +32,12 @@ app.get('/', (req, res) => {
 app.post('/login', jsonParser, (req, res) => {
     try {
         console.log(req.body);
+        const {userName, password} = req.body;
+      //  const newUser = new User({});
+      //  console.log(newUser);
+
+        //newUser.save();
+
         res.send(JSON.stringify('token..'))
     } catch (error) {
         console.log(e)
@@ -54,12 +60,14 @@ app.post('/login', jsonParser, (req, res) => {
 
 
 
-
-
 //server.listen
 const start =async () => {
     try {
-        await mongoose.connect('mongodb+srv://serg1557733:1557733@cluster0.yddbo.mongodb.net/chat_db?retryWrites=true&w=majority'); //conect to database
+        await mongoose.connect('mongodb://localhost:27017/chat').then(() => console.log(`DB started`))
+            const newUser = new User({ userName: 'admin1', password: 'qweqwe', isAdmin: true });
+            const user = await newUser.save()
+            console.log('user', user)
+            
         server.listen(PORT, () => {
             console.log(`Server started. Port: ${PORT}`)
         })   
