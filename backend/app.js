@@ -48,9 +48,6 @@ const TOKEN_KEY = 'rGH4r@3DKOg06hgj';
 const HASH_KEY = 7;
 
 
-
-
-
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
         id,
@@ -98,7 +95,6 @@ app.post('/login', jsonParser, async (req, res) => {
 
         user = await User.findOne({userName})
 
-        
         if (!user) { //if find must login
             user = new User({
                 userName,
@@ -121,20 +117,23 @@ app.post('/login', jsonParser, async (req, res) => {
 })
 
 
+//use auth token
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    console.log(token);
+    if (token) next();
+    io.on("connection", (socket) => {
+    socket.on("message", (data) => {
+        console.log(data.message); 
+        io.emit('chat_message',{
+            message: data.message,
+            name: data.name
+        })
+      });
+     console.log(`user with ID :${socket.id} , connected to socket`); 
+});
+});
 
-
-
-//on connection listen messages and send back text and user name in chat
-// io.on("connection", (socket) => {
-//     socket.on("message", (data) => {
-//         console.log(data.message); //         io.emit('chat_message',{
-//             message: data.message,
-//             name: data.name
-//         })
-//       });
-
-//   console.log(`user with ID :${socket.id} , connected to socket`); 
-// });
 
 
 
