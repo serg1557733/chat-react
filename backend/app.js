@@ -6,6 +6,13 @@ const mongoose = require('mongoose');
 const socket = require("socket.io");
 const User = require('./db/models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+
+
+
+
+
 
 const server = http.createServer(app);
 const jsonParser = express.json();
@@ -41,7 +48,14 @@ app.get('/', (req, res) => {
 
 
 
-const KEY = '777'
+const TOKEN_KEY = 'rturutrrtrtu 45747547'; //change
+
+const HASH_KEY = 7;
+
+
+
+
+ 
 
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
@@ -49,54 +63,57 @@ const generateToken = (id, userName, isAdmin) => {
         userName,
         isAdmin
     }
-    return jwt.sign(payload, KEY, {expiresIn: '12h'});
+    return jwt.sign(payload, TOKEN_KEY, {expiresIn: '12h'});
 
 }
 
 
-
 app.post('/login', jsonParser, async (req, res) => {
     try {
-        const {
-            userName,
-            password
-        } = req.body;
+        const {userName,password} = req.body;
 
-        const allUsers = await User.find({}).exec();
-        const isFirst = !allUsers.length;
-        const dbUser = await User.findOne({
-            userName
-        })
-        
+        const hashPassword =await bcrypt.hash(password, HASH_KEY);
 
+        const usersCount = await User.count().exec();//count users rename
+
+        const isFirst = !usersCount;
+
+        const dbUser = await User.findOne({userName})
 
         if (isFirst) { // if first create as admin
             const newUser = new User({
-                userName,
-                password,
-                isAdmin: true
-            });
+                                userName,
+                                hashPassword,
+                                isAdmin: true
+                            });
+            //trycatch?     
+
             const user = await newUser.save();
-            console.log(user);
+            const token = generateToken(user._id, userName, user.isAdmin);
+            res.json(token)
+            return;
             
-            res.send(JSON.stringify(user))
-        } else if (dbUser) { //if find must login
-            console.log('find user - must login it')
-            res.send(JSON.stringify(dbUser))
+            } 
+        if (dbUser) { //if find must login
+                try {
+                    const token = generateToken(user._id, userName, user.isAdmin);
+                    res.json({token})
+                } catch (e) {
+                    console.log(e)
+                }
+
         } else { //create new user in db
             const newUser = new User({
                 userName,
-                password,
+                hashPassword,
                 isAdmin: false
             });
+            
             const user = await newUser.save();
             console.log(user);
             const token = generateToken(user._id, userName, user.isAdmin);
-            console.log(token)
-            res.send(JSON.stringify(token))
+            res.json({token})
         }
-
-        //res.send(JSON.stringify(dbUser))
 
     } catch (e) {
         console.log(e)

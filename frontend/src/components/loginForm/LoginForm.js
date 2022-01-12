@@ -8,17 +8,26 @@ import { sendForm } from './utils/sendForm';
 
 
 
+
 export const LoginForm = () => {
 
     const [userData, setUserdata] = useState({userName:'', password: ''});
 
     const POST_URL = 'http://localhost:5000/login';
 
+
+    const isValidPayload = ({userName, password}) => {
+        return (userName.trim().length > 2 && password.trim().length > 4) 
+    }
+
+
     const handleSubmit = (e) => {
         e.preventDefault();
-    //    console.log(userData)
-        sendForm(POST_URL, userData);
-        setUserdata({userName:'', password: ''});
+        if(isValidPayload({...userData})){
+            sendForm(POST_URL, userData);
+            setUserdata({userName:'', password: ''});
+        } else console.log('too short') // later do user alert 
+        
     }
 
     
@@ -43,7 +52,7 @@ export const LoginForm = () => {
                 autoComplete="email"
                 autoFocus
                 value={userData.userName}
-                onChange={e => setUserdata({...userData, userName: e.target.value})}
+                onChange={e => setUserdata({...userData, userName: e.target.value})}//
                 
                 />
                 <TextField
