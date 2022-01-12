@@ -48,14 +48,13 @@ app.get('/', (req, res) => {
 
 
 
-const TOKEN_KEY = 'rturutrrtrtu 45747547'; //change
+const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
 
 const HASH_KEY = 7;
 
 
 
 
- 
 
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
@@ -68,51 +67,63 @@ const generateToken = (id, userName, isAdmin) => {
 }
 
 
+const isValidUserName = (userName) => {
+    const nameRegex = /[^A-Za-z0-9]/ ;
+    return (!nameRegex.test(userName) && userName.trim());
+}
+
+
 app.post('/login', jsonParser, async (req, res) => {
     try {
         const {userName,password} = req.body;
+        
+        if (isValidUserName(userName)){
 
-        const hashPassword =await bcrypt.hash(password, HASH_KEY);
+            const hashPassword =await bcrypt.hash(password, HASH_KEY);
 
-        const usersCount = await User.count().exec();//count users rename
+            const usersCount = await User.count().exec();
 
-        const isFirst = !usersCount;
+            const isFirst = !usersCount;
 
-        const dbUser = await User.findOne({userName})
+            const dbUser = await User.findOne({userName})
 
-        if (isFirst) { // if first create as admin
-            const newUser = new User({
-                                userName,
-                                hashPassword,
-                                isAdmin: true
-                            });
-            //trycatch?     
-
-            const user = await newUser.save();
-            const token = generateToken(user._id, userName, user.isAdmin);
-            res.json(token)
-            return;
-            
-            } 
-        if (dbUser) { //if find must login
-                try {
+            if (isFirst) { // if first create as admin
+                const newUser = new User({
+                                    userName,
+                                    hashPassword,
+                                    isAdmin: true
+                                });
+                    //trycatch?     
+                    const user = await newUser.save();
                     const token = generateToken(user._id, userName, user.isAdmin);
-                    res.json({token})
-                } catch (e) {
-                    console.log(e)
-                }
+                    res.json(token)
+                    return;
+                    
+                } 
+            if (dbUser) { //if find must login
+                    try {
+                        const token = generateToken(user._id, userName, user.isAdmin);
+                        res.json({token})
+                    } catch (e) {
+                        console.log(e)
+                    }
 
-        } else { //create new user in db
-            const newUser = new User({
-                userName,
-                hashPassword,
-                isAdmin: false
-            });
-            
-            const user = await newUser.save();
-            console.log(user);
-            const token = generateToken(user._id, userName, user.isAdmin);
-            res.json({token})
+            } else { //create new user in db
+                const newUser = new User({
+                    userName,
+                    hashPassword,
+                    isAdmin: false
+                });
+                
+                const user = await newUser.save();
+                console.log(user);
+                const token = generateToken(user._id, userName, user.isAdmin);
+                res.json({token})
+            }
+
+        } else {
+            res.json({message: 'Invalid username'})
+
         }
 
     } catch (e) {

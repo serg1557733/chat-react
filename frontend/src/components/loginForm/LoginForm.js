@@ -20,13 +20,21 @@ export const LoginForm = () => {
         return (userName.trim().length > 2 && password.trim().length > 4) 
     }
 
+    const isValidUserName = ({userName}) => {
+        const nameRegex = /[^A-Z a-z0-9]/ ;
+        return !nameRegex.test(userName);
+    }
+
+    
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
         if(isValidPayload({...userData})){
             sendForm(POST_URL, userData);
             setUserdata({userName:'', password: ''});
-        } else console.log('too short') // later do user alert 
+        } else console.log('too short or using special symbols') // later do user alert 
         
     }
 
