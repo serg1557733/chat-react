@@ -25,18 +25,17 @@ export const LoginForm = () => {
         return !nameRegex.test(userName);
     }
 
-    
-
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        if(isValidPayload({...userData})){
+        if(isValidPayload({...userData}) && isValidUserName({...userData})){
             sendForm(POST_URL, userData);
             setUserdata({userName:'', password: ''});
         } else console.log('too short or using special symbols') // later do user alert 
         
     }
+
+    
 
     
     return (

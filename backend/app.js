@@ -9,11 +9,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 
-
-
-
-
-
 const server = http.createServer(app);
 const jsonParser = express.json();
 app.use(cors()); // cors 
@@ -73,64 +68,57 @@ const isValidUserName = (userName) => {
 }
 
 
+//express-validator may use
+
 app.post('/login', jsonParser, async (req, res) => {
     try {
         const {userName,password} = req.body;
         
-        if (isValidUserName(userName)){
-
-            const hashPassword =await bcrypt.hash(password, HASH_KEY);
-
-            const usersCount = await User.count().exec();
-
-            const isFirst = !usersCount;
-
-            const dbUser = await User.findOne({userName})
-
-            if (isFirst) { // if first create as admin
-                const newUser = new User({
-                                    userName,
-                                    hashPassword,
-                                    isAdmin: true
-                                });
-                    //trycatch?     
-                    const user = await newUser.save();
-                    const token = generateToken(user._id, userName, user.isAdmin);
-                    res.json(token)
-                    return;
-                    
-                } 
-            if (dbUser) { //if find must login
-                    try {
-                        const token = generateToken(user._id, userName, user.isAdmin);
-                        res.json({token})
-                    } catch (e) {
-                        console.log(e)
-                    }
-
-            } else { //create new user in db
-                const newUser = new User({
-                    userName,
-                    hashPassword,
-                    isAdmin: false
-                });
-                
-                const user = await newUser.save();
-                console.log(user);
-                const token = generateToken(user._id, userName, user.isAdmin);
-                res.json({token})
-            }
-
-        } else {
-            res.json({message: 'Invalid username'})
-
+        if (!isValidUserName(userName)){
+            return res.status(400).json({message: 'Invalid username'})
         }
 
+        const hashPassword = await bcrypt.hash(password, HASH_KEY);
+
+        const usersCount = await User.count().exec();
+
+        const isFirst = !usersCount;
+        
+        let user;
+
+        if (isFirst) { // if first create as admin
+            user = new User({
+                                userName,
+                                hashPassword,
+                                isAdmin: true
+                            });
+                //trycatch?  
+                await user.save();      
+        } 
+
+        user = await User.findOne({userName})
+
+        
+        if (!user) { //if find must login
+            user = new User({
+                userName,
+                hashPassword,
+                isAdmin: false
+            });
+            await user.save()
+        }
+        
+        if (!bcrypt.compareSync(password, user.hashPassword)){
+            return res.status(400).json({message: 'Invalid credantials'})
+        }
+
+        const token = generateToken(user._id, userName, user.isAdmin);
+        res.json({token})
     } catch (e) {
         console.log(e)
+        res.status(500).json({message: `Error ${e}`})
     }
 })
-
 
 
 
