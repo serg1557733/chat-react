@@ -3,13 +3,11 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
-import { useState } from 'react';
+import { useHistory, useState } from 'react';
 import { sendForm } from './utils/sendForm';
 
 
-
-
-export const LoginForm = () => {
+export const LoginForm = ({}) => {
 
     const [userData, setUserdata] = useState({userName:'', password: ''});
 
@@ -25,7 +23,6 @@ export const LoginForm = () => {
         return !nameRegex.test(userName);
     }
 
-
     const handleSubmit = (e) => {
         e.preventDefault();
         if(isValidPayload({...userData}) && isValidUserName({...userData})){
@@ -35,9 +32,6 @@ export const LoginForm = () => {
         
     }
 
-    
-
-    
     return (
         <Container maxWidth="xs">
             <Box

@@ -65,6 +65,7 @@ const isValidUserName = (userName) => {
 }
 
 
+
 //express-validator may use
 
 app.post('/login', jsonParser, async (req, res) => {
@@ -120,22 +121,23 @@ app.post('/login', jsonParser, async (req, res) => {
 //use auth token
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
-    console.log(token);
-    if (token) next();
-    io.on("connection", (socket) => {
-    socket.on("message", (data) => {
-        console.log(data.message); 
-        io.emit('chat_message',{
-            message: data.message,
-            name: data.name
-        })
+    if(!token) return
+
+    const verifyToken = jwt.verify(token, TOKEN_KEY, console.log('Error verify token'))
+    socket.user = verifyToken; // add user objekt to socet for sending to client
+    next();
+    io.on("connection", () => {
+        socket.emit('connected', socket.user)
+        socket.on("message", (socket) => {
+            console.log(socket); 
+            io.emit('chat_message',{
+                message: data.message,
+                name: data.name
+            })
       });
-     console.log(`user with ID :${socket.id} , connected to socket`); 
+     console.log(`user :${socket.user.userName} , connected to socket`); 
 });
 });
-
-
-
 
 
 //server and database start
