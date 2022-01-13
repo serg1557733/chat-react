@@ -1,15 +1,28 @@
-import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import { useState } from 'react';
 
 
-export const MessageForm = () => {
+
+export const MessageForm = ({sendMessage}) => {
+
+    const [message, setMessage] = useState({message: ''});
+     
     return (
-        <Container maxWidth="xs">
+        <>
+          <TextField id="outlined-basic" 
+            label="Type a message..." 
+            variant="outlined" 
+            value={message.message}
+            onChange={e => setMessage({...message, message: e.target.value})}
 
-           <TextField id="outlined-basic" label="Type a message..." variant="outlined" />
-        
-        </Container>
-        
+            /> 
+            <Button variant="contained" onClick={()=> {
+                sendMessage(message);
+                setMessage({message: ''});
+             }}>Send</Button>
+        </>    
+            
     )
 
 }

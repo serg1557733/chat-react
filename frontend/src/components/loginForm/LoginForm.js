@@ -76,7 +76,6 @@ export const LoginForm = ({ onSubmit}) => {
                 autoComplete="current-password"
                 value={userData.password}
                 onChange={e => setUserdata({...userData, password: e.target.value})}
-
                 />
                 <Button 
                 type="submit"

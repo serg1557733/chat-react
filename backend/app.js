@@ -29,18 +29,6 @@ app.get('/', (req, res) => {
     res.send('here will be login page')
 })
 
-// const saveUsersToDb = async (userName, password, isAdmin ) => {
-//     try {
-//         const newUser = new User({ userName, password, isAdmin });
-//         const user = await newUser.save()
-//         res.send(JSON.stringify(user))
-
-//     } catch (error) {
-//         console.log(error)
-//     }
-// }
-
-
 
 const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
 
@@ -62,7 +50,6 @@ const isValidUserName = (userName) => {
     const nameRegex = /[^A-Za-z0-9]/ ;
     return (!nameRegex.test(userName) && userName.trim());
 }
-
 
 
 //express-validator may use
@@ -89,13 +76,12 @@ app.post('/login', jsonParser, async (req, res) => {
                                 hashPassword,
                                 isAdmin: true
                             });
-                //trycatch?  
                 await user.save();      
         } 
 
         user = await User.findOne({userName})
 
-        if (!user) { //if find must login
+        if (!user) {
             user = new User({
                 userName,
                 hashPassword,
@@ -126,9 +112,8 @@ io.use((socket, next) => {
     }
     
     try {
-       const user = jwt.verify(token, TOKEN_KEY)//add try  socket discon
-        socket.user = user; // add user objekt to socet for sending to client
-        console.log(user) 
+       const user = jwt.verify(token, TOKEN_KEY)
+        socket.user = user;
     } catch(e) {
         console.log(e)
         socket.disconnect();
@@ -139,12 +124,8 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
     socket.emit('connected', socket.user)
-    socket.on("message", (socket) => {
-        // console.log(socket); 
-        io.emit('chat_message',{
-            message: data.message,
-            name: data.name
-        })
+    socket.on("message", (data) => {
+        console.log(data)
   });
     socket.on("disconnect", () => {
         console.log(`user :${socket.user.userName} , disconnected to socket`); 
