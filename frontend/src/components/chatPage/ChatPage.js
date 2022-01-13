@@ -38,7 +38,6 @@ export const ChatPage = ({ onExit, token }) => {
     }, [])
 
 
-
     const sendMessage = (data) => {
         if (data.message && data.message.length < 200) {
             console.log('send..' , data)

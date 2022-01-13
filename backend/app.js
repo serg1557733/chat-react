@@ -5,13 +5,19 @@ const http = require('http'); //create new http
 const mongoose = require('mongoose');
 const socket = require("socket.io");
 const User = require('./db/models/User');
+const Message = require('./db/models/Message');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const moment = require('moment');
+
 
 
 const server = http.createServer(app);
 const jsonParser = express.json();
 app.use(cors()); // cors 
+
+
+const currentDate = moment().format('llll');;
 
 
 const io = require("socket.io")(server, {
@@ -49,6 +55,21 @@ const generateToken = (id, userName, isAdmin) => {
 const isValidUserName = (userName) => {
     const nameRegex = /[^A-Za-z0-9]/ ;
     return (!nameRegex.test(userName) && userName.trim());
+}
+
+
+
+const saveMessage = async (data, userName) => {
+    const message = new Message({
+        text: data.message,
+        author: userName,
+        createDate:currentDate
+    });
+    try {
+        await message.save() 
+    } catch (error) {
+        console.log(error)   
+    }
 }
 
 
@@ -122,16 +143,27 @@ io.use((socket, next) => {
     next();
 });
 
+
+
 io.on("connection", (socket) => {
     socket.emit('connected', socket.user)
     socket.on("message", (data) => {
-        console.log(data)
-  });
+        const userName = socket.user.userName;
+        //add time validation
+        saveMessage(data, userName)
+    });
     socket.on("disconnect", () => {
         console.log(`user :${socket.user.userName} , disconnected to socket`); 
        });
- console.log(`user :${socket.user.userName} , connected to socket`); 
+        console.log(`user :${socket.user.userName} , connected to socket`); 
 });
+
+
+
+
+
+
+
 
 //server and database start
 const start = async () => {
