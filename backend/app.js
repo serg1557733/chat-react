@@ -17,8 +17,6 @@ const jsonParser = express.json();
 app.use(cors()); // cors 
 
 
-const currentDate = moment().format('llll');;
-
 
 const io = require("socket.io")(server, {
     cors: {
@@ -39,7 +37,6 @@ app.get('/', (req, res) => {
 const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
 
 const HASH_KEY = 7;
-
 
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
@@ -62,8 +59,8 @@ const isValidUserName = (userName) => {
 const saveMessage = async (data, userName) => {
     const message = new Message({
         text: data.message,
-        author: userName,
-        createDate:currentDate
+        userName: userName,
+        createDate:new Date()
     });
     try {
         await message.save() 
@@ -71,7 +68,6 @@ const saveMessage = async (data, userName) => {
         console.log(error)   
     }
 }
-
 
 //express-validator may use
 
@@ -144,7 +140,6 @@ io.use((socket, next) => {
 });
 
 
-
 io.on("connection", (socket) => {
     socket.emit('connected', socket.user)
     socket.on("message", (data) => {
@@ -160,6 +155,20 @@ io.on("connection", (socket) => {
 
 
 
+//find time of last user post
+const findLastPostTime = async (userName) => {
+    try {
+       // console.log({username})
+        const posts = await Message.findOne({userName}).sort({ 'createDate': -1 });
+        return posts.createDate;
+   
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+findLastPostTime('ghgggggggggggggggggg')
+.then( user => console.log(user))
 
 
 
@@ -176,7 +185,8 @@ const start = async () => {
     } catch (e) {
         console.log(e)
     }
-
 }
+
+
 
 start();
