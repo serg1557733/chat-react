@@ -8,9 +8,8 @@ export const sendForm = async (POST_URL, userData) => {
             }
         });
         const json = await response.json();
+        return json.token;
 
-        console.log(json)
-        localStorage.setItem('token' , json.token)
     } catch (e) {
         console.log(e)
     }

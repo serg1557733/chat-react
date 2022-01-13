@@ -3,11 +3,11 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
-import { useHistory, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { sendForm } from './utils/sendForm';
 
 
-export const LoginForm = ({}) => {
+export const LoginForm = ({ onSubmit}) => {
 
     const [userData, setUserdata] = useState({userName:'', password: ''});
 
@@ -23,14 +23,23 @@ export const LoginForm = ({}) => {
         return !nameRegex.test(userName);
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if(isValidPayload({...userData}) && isValidUserName({...userData})){
-            sendForm(POST_URL, userData);
+            const token = await sendForm(POST_URL, userData);
+            onSubmit(token);
+            console.log(token)
             setUserdata({userName:'', password: ''});
+            
         } else console.log('too short or using special symbols') // later do user alert 
         
     }
+
+    useEffect(()=>{
+        return () => {
+            setUserdata({userName:'', password: ''})
+        }
+    }, [])
 
     return (
         <Container maxWidth="xs">

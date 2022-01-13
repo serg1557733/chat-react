@@ -29,7 +29,6 @@ app.get('/', (req, res) => {
     res.send('here will be login page')
 })
 
-
 // const saveUsersToDb = async (userName, password, isAdmin ) => {
 //     try {
 //         const newUser = new User({ userName, password, isAdmin });
@@ -104,13 +103,12 @@ app.post('/login', jsonParser, async (req, res) => {
             });
             await user.save()
         }
-        
         if (!bcrypt.compareSync(password, user.hashPassword)){
             return res.status(400).json({message: 'Invalid credantials'})
         }
-
         const token = generateToken(user._id, userName, user.isAdmin);
         res.json({token})
+
     } catch (e) {
         console.log(e)
         res.status(500).json({message: `Error ${e}`})
@@ -119,26 +117,40 @@ app.post('/login', jsonParser, async (req, res) => {
 
 
 //use auth token
+
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
-    if(!token) return
-
-    const verifyToken = jwt.verify(token, TOKEN_KEY, console.log('Error verify token'))
-    socket.user = verifyToken; // add user objekt to socet for sending to client
+    if(!token) {
+        socket.disconnect();
+        return
+    }
+    
+    try {
+       const user = jwt.verify(token, TOKEN_KEY)//add try  socket discon
+        socket.user = user; // add user objekt to socet for sending to client
+        console.log(user) 
+    } catch(e) {
+        console.log(e)
+        socket.disconnect();
+    }
+    
     next();
-    io.on("connection", () => {
-        socket.emit('connected', socket.user)
-        socket.on("message", (socket) => {
-            console.log(socket); 
-            io.emit('chat_message',{
-                message: data.message,
-                name: data.name
-            })
-      });
-     console.log(`user :${socket.user.userName} , connected to socket`); 
-});
 });
 
+io.on("connection", (socket) => {
+    socket.emit('connected', socket.user)
+    socket.on("message", (socket) => {
+        // console.log(socket); 
+        io.emit('chat_message',{
+            message: data.message,
+            name: data.name
+        })
+  });
+    socket.on("disconnect", () => {
+        console.log(`user :${socket.user.userName} , disconnected to socket`); 
+       });
+ console.log(`user :${socket.user.userName} , connected to socket`); 
+});
 
 //server and database start
 const start = async () => {

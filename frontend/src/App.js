@@ -1,22 +1,7 @@
 import './App.css';
-import {io} from 'socket.io-client';
 import { LoginForm } from './components/loginForm/LoginForm';
 import { ChatPage } from './components/chatPage/ChatPage';
 import { useEffect, useState } from 'react';
-
-
-const SERVER_URL = 'http://localhost:5000';
-
-const token = localStorage.getItem('token');
-
-const socket = io.connect(SERVER_URL, {
-          auth: {token}
-        });
-            socket.on('connected', (data) => {
-                console.log( data.userName , 'connected to chat...');
-                }).on('error', (e) => {
-                console.log(e)
-        });
 
 
 
@@ -33,12 +18,19 @@ const socket = io.connect(SERVER_URL, {
 
 function App() {
 
-    
-   
-    return (
+    const [token, setToken] = useState(localStorage.getItem('token'))
 
-        (!!token) ?  <ChatPage/> : <LoginForm/>
-    );
+    useEffect(() => {
+        localStorage.setItem('token', token);
+    }, [token])
+
+
+    if (token) {
+        return <ChatPage token={token} onExit={() => setToken('')}/> 
+    }
+
+    return <LoginForm onSubmit={setToken}/>; // delete setTokek after unmounted
+
 }
 
 export default App;
