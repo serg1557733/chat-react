@@ -18,11 +18,15 @@ export const ChatPage = ({ onExit, token }) => {
      
     useEffect(() => {
         if(newtoken){
-            const SERVER_URL = 'http://localhost:5000';
-            socket.current = io.connect(SERVER_URL, {
-                auth: {token: newtoken}
-            })
-
+            try {
+                const SERVER_URL = 'http://localhost:5000';
+                socket.current = io.connect(SERVER_URL, {
+                    auth: {token: newtoken}
+                }) 
+            } catch (error) {
+                console.log(error)
+                
+            } 
         }
     }, [])
 

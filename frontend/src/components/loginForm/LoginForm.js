@@ -5,11 +5,15 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import { useState, useEffect } from 'react';
 import { sendForm } from './utils/sendForm';
+import { Modal } from '../modal/Modal';
 
 
 export const LoginForm = ({ onSubmit}) => {
 
     const [userData, setUserdata] = useState({userName:'', password: ''});
+    const [textModal, setTextModal] = useState('')
+    const [display, setDisplay] = useState('none');
+
 
     const POST_URL = 'http://localhost:5000/login';
 
@@ -27,11 +31,19 @@ export const LoginForm = ({ onSubmit}) => {
         e.preventDefault();
         if(isValidPayload({...userData}) && isValidUserName({...userData})){
             const token = await sendForm(POST_URL, userData);
-            onSubmit(token);
-            console.log(token)
+            if(token){
+                onSubmit(token);     
+            }
+            setTextModal('Invalid credantials')
+            setDisplay('block')
             setUserdata({userName:'', password: ''});
             
-        } else console.log('too short or using special symbols') // later do user alert 
+            
+        } else {
+            setTextModal('too short or using special symbols')
+            setDisplay('block')
+            console.log('too short or using special symbols') // later do user aler
+        }
         
     }
 
@@ -62,8 +74,10 @@ export const LoginForm = ({ onSubmit}) => {
                 autoComplete="email"
                 autoFocus
                 value={userData.userName}
-                onChange={e => setUserdata({...userData, userName: e.target.value})}//
-                
+                onChange={e => {
+                    setUserdata({...userData, userName: e.target.value})
+                    setDisplay('none')
+                }}
                 />
                 <TextField
                 margin="normal"
@@ -77,6 +91,11 @@ export const LoginForm = ({ onSubmit}) => {
                 value={userData.password}
                 onChange={e => setUserdata({...userData, password: e.target.value})}
                 />
+                <Modal 
+                text={textModal}
+                propDisplay = {display}
+                
+                ></Modal>
                 <Button 
                 type="submit"
                 variant="contained"

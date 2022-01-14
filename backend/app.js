@@ -129,7 +129,8 @@ io.use((socket, next) => {
     }
     
     try {
-       const user = jwt.verify(token, TOKEN_KEY)
+        const user = jwt.verify(token, TOKEN_KEY)
+        console.log(user)
         socket.user = user;
     } catch(e) {
         console.log(e)
@@ -147,10 +148,16 @@ io.on("connection", (socket) => {
         //add time validation
         saveMessage(data, userName)
     });
-    socket.on("disconnect", () => {
-        console.log(`user :${socket.user.userName} , disconnected to socket`); 
-       });
-        console.log(`user :${socket.user.userName} , connected to socket`); 
+    try {
+        socket.on("disconnect", () => {
+            console.log(`user :${socket.user.userName} , disconnected to socket`); 
+           });
+            console.log(`user :${socket.user.userName} , connected to socket`); 
+        
+    } catch (e) {
+       // console.log(e)
+    }
+
 });
 
 
@@ -166,6 +173,7 @@ const findLastPostTime = async (userName) => {
         console.log(error)
     }
 }
+
 
 findLastPostTime('ghgggggggggggggggggg')
 .then( user => console.log(user))
@@ -186,7 +194,6 @@ const start = async () => {
         console.log(e)
     }
 }
-
 
 
 start();
