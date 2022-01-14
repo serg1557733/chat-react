@@ -7,6 +7,7 @@ import { Userslist } from './usersList/UsersList';
 import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
 import { useEffect, useState, useRef} from 'react';
+import { Moment } from 'moment-timezone';
 
 
 
@@ -14,6 +15,7 @@ export const ChatPage = ({ onExit, token }) => {
 
     const newtoken = token;
     const [socket, setSocket] = useState(null);
+    const [messages, setMessages] = useState([])
 
      
     useEffect(() => {
@@ -45,7 +47,8 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(e)
             }); 
             socket.on('allmessages', (data) => {
-                    console.log( data , 'get kkk messasges useEffect');
+                    setMessages(data)
+                    console.log( data , 'get messasges useEffect');
                     }).on('error', (e) => {
                     console.log(e)
             }); 
@@ -58,10 +61,21 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log( data , 'all users from db');
                 }).on('error', (e) => {
                 console.log(e)
+            }); 
+            socket.on('disconnect', (data) => {
+                console.log( data, 'token');
+                }).on('error', (e) => {
+                console.log(e)
+            });  
+            socket.on('message', (data) => {
+                setMessages((messages) => [...messages, data] )
+                }).on('error', (e) => {
+                console.log(e)
             });    
         }
     }, [socket])
   
+    console.log(messages)
     return (
         <Container maxWidth="lg">
             <Box 
@@ -76,8 +90,18 @@ export const ChatPage = ({ onExit, token }) => {
                     
                 }}
                 >
-                    <MessageList></MessageList>
-                    <MessageForm sendMessage = {(data) => sendMessage(data)}></MessageForm>
+                {messages.map((item, index) =>
+                    <div key={index}>
+                       <span>{item.userName}</span>
+                       <div>{item.text}</div>
+                      {item.isAdmin ?  '' : <span>admin</span>}
+                      <div>{item.createDate}</div>
+                    </div>
+                )}
+                    
+                    <MessageForm sendMessage = {(data) => {
+                        sendMessage(data)
+                    }}></MessageForm>
                 </Box>
                 <Box
                     sx={{
@@ -89,7 +113,9 @@ export const ChatPage = ({ onExit, token }) => {
                 >
                     <UserInfo></UserInfo>
                     <Userslist></Userslist>
-                    <Button variant="contained" onClick={()=> {
+                    <Button variant="contained"
+
+                     onClick={(e)=> {
                         socket.disconnect()
                         onExit()
                     }}>Logout</Button>

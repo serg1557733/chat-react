@@ -131,11 +131,16 @@ app.post('/login', jsonParser, async (req, res) => {
     }
 })
 
-
 //use auth token
 
-io.use((socket, next) => {
+
+io.use( async (socket, next) => {
     const token = socket.handshake.auth.token;
+    const sockets = await io.fetchSockets();
+    const usersOnline = [];
+    sockets.map((sock) => {
+        usersOnline.push(sock.user);
+    }) 
     if(!token) {
         socket.disconnect();
         return
@@ -143,17 +148,22 @@ io.use((socket, next) => {
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
+        const exist = await usersOnline.find(current=> (current.userName == socket.user.userName))
+        if(exist) {
+            console.log('exist', exist)   
+          // socket.disconnect(); 
+        } 
+      
+
     } catch(e) {
         console.log(e)
         socket.disconnect();
+        return
     }
 
-    
+
     next();
 });
-
-
-
 
 io.on("connection", async (socket) => {
 
@@ -165,23 +175,30 @@ io.on("connection", async (socket) => {
     
     io.emit('usersOnline', results) // send array online users
 
-
     socket.emit('connected', socket.user)
+    
     if(socket.user.isAdmin) getAllDbUsers(socket); //sent all users from db to admin
     const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
-            socket.messagesToShow = messagesToShow
-            socket.emit('allmessages', socket.messagesToShow) 
-
+            socket.emit('allmessages', messagesToShow.reverse()) 
+    
     socket.on("message", async (data) => {
         const userName = socket.user.userName;
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
         if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000
-            saveMessage(data, userName);
-            const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
-            socket.messagesToShow = messagesToShow
-            socket.emit('allmessages', socket.messagesToShow) 
+        const message = new Message({
+                text: data.message,
+                userName: userName,
+                createDate: Date.now()
+            });
+            try {
+                await message.save() 
+            } catch (error) {
+                console.log(error)   
+            }
+            io.emit('message', message)
         }
+
     });
     try {
         socket.on("disconnect", () => {
