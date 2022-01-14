@@ -41,14 +41,22 @@ export const ChatPage = ({ onExit, token }) => {
         }
     }, [])
 
-
     const sendMessage = (data) => {
         if (data.message && data.message.length < 200) {
             console.log('send..' , data)
-            socket.current.emit('message', data);   
+            socket.current.emit('message', data); 
         } 
     };
 
+    useEffect(() => {
+        if(socket.current){
+            socket.current.on('allmessages', (data) => {
+                        console.log( data , 'get messasges useEffect');
+                        }).on('error', (e) => {
+                        console.log(e)
+                }); 
+        }
+    }, [socket, sendMessage])
   
     return (
         <Container maxWidth="lg">

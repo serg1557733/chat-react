@@ -147,17 +147,22 @@ io.use((socket, next) => {
 });
 
 
-io.on("connection",  (socket) => {
+io.on("connection", async (socket) => {
     socket.emit('connected', socket.user)
+    const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
+            socket.messagesToShow = messagesToShow
+            socket.emit('allmessages', socket.messagesToShow) 
+    
     socket.on("message", async (data) => {
         const userName = socket.user.userName;
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
-        if(((Date.now() - Date.parse(post.createDate)) > 15000)){
+        if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000
             saveMessage(data, userName);
-            //socket.emit('allmasseges', socket) 
+            const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
+            socket.messagesToShow = messagesToShow
+            socket.emit('allmessages', socket.messagesToShow) 
         }
-        
     });
     try {
         socket.on("disconnect", () => {
