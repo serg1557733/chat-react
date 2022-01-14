@@ -13,50 +13,49 @@ import { useEffect, useState, useRef} from 'react';
 export const ChatPage = ({ onExit, token }) => {
 
     const newtoken = token;
-    const socket = useRef();
+    const [socket, setSocket] = useState(null);
 
      
     useEffect(() => {
         if(newtoken){
             try {
                 const SERVER_URL = 'http://localhost:5000';
-                socket.current = io.connect(SERVER_URL, {
+                setSocket(io.connect(SERVER_URL, {
                     auth: {token: newtoken}
-                }) 
+                }) )
+    
             } catch (error) {
                 console.log(error)
-                
             } 
-        }
-    }, [])
-
-
-    useEffect(() => {
-        if(socket.current){
-            socket.current.on('connected', (data) => {
-                        console.log( data.userName , 'connected to chat...');
-                        }).on('error', (e) => {
-                        console.log(e)
-                }); 
         }
     }, [])
 
     const sendMessage = (data) => {
         if (data.message && data.message.length < 200) {
             console.log('send..' , data)
-            socket.current.emit('message', data); 
+            socket.emit('message', data); 
         } 
     };
 
     useEffect(() => {
-        if(socket.current){
-            socket.current.on('allmessages', (data) => {
-                        console.log( data , 'get messasges useEffect');
-                        }).on('error', (e) => {
-                        console.log(e)
-                }); 
+        if(socket){
+            socket.on('connected', (data) => {
+                console.log( data , 'connected to chat...');
+                }).on('error', (e) => {
+                console.log(e)
+            }); 
+            socket.on('allmessages', (data) => {
+                    console.log( data , 'get kkk messasges useEffect');
+                    }).on('error', (e) => {
+                    console.log(e)
+            }); 
+            socket.on('usersOnline', (data) => {
+                console.log( data , 'online');
+                }).on('error', (e) => {
+                console.log(e)
+            });     
         }
-    }, [socket, sendMessage])
+    }, [socket])
   
     return (
         <Container maxWidth="lg">
@@ -86,7 +85,7 @@ export const ChatPage = ({ onExit, token }) => {
                     <UserInfo></UserInfo>
                     <Userslist></Userslist>
                     <Button variant="contained" onClick={()=> {
-                        socket.current.disconnect()
+                        socket.disconnect()
                         onExit()
                     }}>Logout</Button>
 

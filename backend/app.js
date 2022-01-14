@@ -134,7 +134,6 @@ io.use((socket, next) => {
         socket.disconnect();
         return
     }
-    
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
@@ -142,17 +141,29 @@ io.use((socket, next) => {
         console.log(e)
         socket.disconnect();
     }
+
     
     next();
 });
 
 
+
+
 io.on("connection", async (socket) => {
+
+    const sockets = await io.fetchSockets();
+    const results = [];
+    sockets.map((sock) => {
+        results.push(sock.user);
+    })  
+    
+    io.emit('usersOnline', results)
+
     socket.emit('connected', socket.user)
     const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
             socket.messagesToShow = messagesToShow
             socket.emit('allmessages', socket.messagesToShow) 
-    
+
     socket.on("message", async (data) => {
         const userName = socket.user.userName;
         const dateNow = Date.now();
@@ -166,6 +177,7 @@ io.on("connection", async (socket) => {
     });
     try {
         socket.on("disconnect", () => {
+            io.emit('usersOnline', results)
             console.log(`user :${socket.user.userName} , disconnected to socket`); 
            });
             console.log(`user :${socket.user.userName} , connected to socket`); 
@@ -175,6 +187,8 @@ io.on("connection", async (socket) => {
     }
 
 });
+
+
 
 
 
