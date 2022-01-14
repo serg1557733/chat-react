@@ -8,7 +8,6 @@ const User = require('./db/models/User');
 const Message = require('./db/models/Message');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const moment = require('moment');
 
 
 
@@ -35,8 +34,9 @@ app.get('/', (req, res) => {
 
 
 const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
-
 const HASH_KEY = 7;
+
+
 
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
@@ -44,10 +44,9 @@ const generateToken = (id, userName, isAdmin) => {
         userName,
         isAdmin
     }
-    return jwt.sign(payload, TOKEN_KEY, {expiresIn: '12h'});
+    return jwt.sign(payload, TOKEN_KEY, {expiresIn: '48h'});
 
 }
-
 
 const isValidUserName = (userName) => {
     const nameRegex = /[^A-Za-z0-9]/ ;
@@ -60,7 +59,7 @@ const saveMessage = async (data, userName) => {
     const message = new Message({
         text: data.message,
         userName: userName,
-        createDate:new Date()
+        createDate: Date.now()
     });
     try {
         await message.save() 
@@ -69,7 +68,15 @@ const saveMessage = async (data, userName) => {
     }
 }
 
-//express-validator may use
+// const getMessages = async () => {
+//     try {
+//         await message.find(); 
+//     } catch (error) {
+//         console.log(error)   
+//     }
+// }
+
+
 
 app.post('/login', jsonParser, async (req, res) => {
     try {
@@ -130,7 +137,6 @@ io.use((socket, next) => {
     
     try {
         const user = jwt.verify(token, TOKEN_KEY)
-        console.log(user)
         socket.user = user;
     } catch(e) {
         console.log(e)
@@ -141,12 +147,17 @@ io.use((socket, next) => {
 });
 
 
-io.on("connection", (socket) => {
+io.on("connection",  (socket) => {
     socket.emit('connected', socket.user)
-    socket.on("message", (data) => {
+    socket.on("message", async (data) => {
         const userName = socket.user.userName;
-        //add time validation
-        saveMessage(data, userName)
+        const dateNow = Date.now();
+        const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
+        if(((Date.now() - Date.parse(post.createDate)) > 15000)){
+            saveMessage(data, userName);
+            //socket.emit('allmasseges', socket) 
+        }
+        
     });
     try {
         socket.on("disconnect", () => {
@@ -155,28 +166,10 @@ io.on("connection", (socket) => {
             console.log(`user :${socket.user.userName} , connected to socket`); 
         
     } catch (e) {
-       // console.log(e)
+        console.log(e)
     }
 
 });
-
-
-
-//find time of last user post
-const findLastPostTime = async (userName) => {
-    try {
-       // console.log({username})
-        const posts = await Message.findOne({userName}).sort({ 'createDate': -1 });
-        return posts.createDate;
-   
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-
-findLastPostTime('ghgggggggggggggggggg')
-.then( user => console.log(user))
 
 
 
@@ -194,6 +187,5 @@ const start = async () => {
         console.log(e)
     }
 }
-
 
 start();
