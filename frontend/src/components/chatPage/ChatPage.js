@@ -53,7 +53,12 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log( data , 'online');
                 }).on('error', (e) => {
                 console.log(e)
-            });     
+            });  
+            socket.on('allDbUsers', (data) => {
+                console.log( data , 'all users from db');
+                }).on('error', (e) => {
+                console.log(e)
+            });    
         }
     }, [socket])
   

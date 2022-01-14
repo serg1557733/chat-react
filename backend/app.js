@@ -76,6 +76,12 @@ const saveMessage = async (data, userName) => {
 //     }
 // }
 
+//get all users from db
+const getAllDbUsers = async (socket) => {
+    const usersDb = await User.find({})
+    socket.emit('allDbUsers', usersDb)
+}
+
 
 
 app.post('/login', jsonParser, async (req, res) => {
@@ -157,9 +163,11 @@ io.on("connection", async (socket) => {
         results.push(sock.user);
     })  
     
-    io.emit('usersOnline', results)
+    io.emit('usersOnline', results) // send array online users
+
 
     socket.emit('connected', socket.user)
+    if(socket.user.isAdmin) getAllDbUsers(socket); //sent all users from db to admin
     const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
             socket.messagesToShow = messagesToShow
             socket.emit('allmessages', socket.messagesToShow) 
