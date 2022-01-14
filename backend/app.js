@@ -148,10 +148,14 @@ io.use( async (socket, next) => {
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
-        const exist = await usersOnline.find(current=> (current.userName == socket.user.userName))
+      //  console.log('exist', sockets)   
+        const exist = sockets.find( current => current.user.userName == socket.user.userName)
+      //  sockets.map((current) => console.log(current.user.userName))
+      //  console.log('exist', exist)   
+
         if(exist) {
             console.log('exist', exist)   
-          // socket.disconnect(); 
+            exist.disconnect(); 
         } 
       
 

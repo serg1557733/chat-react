@@ -63,6 +63,7 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(e)
             }); 
             socket.on('disconnect', (data) => {
+                localStorage.clear();
                 console.log( data, 'token');
                 }).on('error', (e) => {
                 console.log(e)
