@@ -77,6 +77,7 @@ const isValidUserName = (userName) => {
 
 
 //get all users from db
+
 const getAllDbUsers = async (socket) => {
     const usersDb = await User.find({})
     socket.emit('allDbUsers', usersDb)
@@ -103,7 +104,9 @@ app.post('/login', jsonParser, async (req, res) => {
             user = new User({
                                 userName,
                                 hashPassword,
-                                isAdmin: true
+                                isAdmin: true,
+                                isBanned: false,
+                                isMutted: false
                             });
                 await user.save();      
         } 
@@ -114,7 +117,9 @@ app.post('/login', jsonParser, async (req, res) => {
             user = new User({
                 userName,
                 hashPassword,
-                isAdmin: false
+                isAdmin: false,
+                isBanned: false,
+                isMutted: false
             });
             await user.save()
         }
@@ -167,26 +172,27 @@ io.use( async (socket, next) => {
 });
 
 io.on("connection", async (socket) => {
-
+    const userName = socket.user.userName;
     const sockets = await io.fetchSockets();
+    const dbUser = await User.findOne({userName})
     const results = [];
     sockets.map((sock) => {
         results.push(sock.user);
     })  
-    
     io.emit('usersOnline', results) // send array online users
 
-    socket.emit('connected', socket.user)
-    
+    socket.emit('connected', dbUser) //socket.user
+   
+
     if(socket.user.isAdmin) getAllDbUsers(socket); //sent all users from db to admin
     const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
             socket.emit('allmessages', messagesToShow.reverse()) 
     
+
     socket.on("message", async (data) => {
         const userName = socket.user.userName;
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
-        console.log(post)
         if(post){
             if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000
                 const message = new Message({
@@ -225,8 +231,23 @@ io.on("connection", async (socket) => {
     } catch (e) {
         console.log(e)
     }
+    try {
+        socket.on("muteUser",async (data) => {
+            const {user, prevStatus} = data;
+            const sockets = await io.fetchSockets();
+            const mute = await User.updateOne({userName : user}, {$set: {isMutted :!prevStatus}});
+            getAllDbUsers(socket)
+            const exist = sockets.find( current => current.user.userName == user)
+            const dbUser = await User.findOne({userName : user})
+            if(exist){
+               exist.emit('connected', dbUser)   
+            }
+           
+           });
+    } catch (e) {
+        console.log(e)
+    }
 });
-
 
 
 //server and database start

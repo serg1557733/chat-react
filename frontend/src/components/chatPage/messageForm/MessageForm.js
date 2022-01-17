@@ -1,14 +1,19 @@
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import Button from '@mui/material/Button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 
 
 
-export const MessageForm = ({sendMessage}) => {
+export const MessageForm = ({sendMessage, data}) => {
 
     const [message, setMessage] = useState({message: ''});
-     
+
+    useEffect(() => {
+        console.log('effect form data')
+    },[data.isMutted])
+
+
     return (
         <Box 
         component="form" 
@@ -36,12 +41,13 @@ export const MessageForm = ({sendMessage}) => {
             style={{
                 width: '80%',
                 resize: 'none',
-                borderRadius: '4px'
+                borderRadius: '4px',
             }}
             /> 
             <Button 
             variant="contained" 
             type='submit'
+            disabled={data.isMutted}
             style={{
                 width: '20%',
             }}

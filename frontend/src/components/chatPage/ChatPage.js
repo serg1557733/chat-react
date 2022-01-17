@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
 import { useEffect, useState} from 'react';
 import './chatPage.scss';
-import moment from 'moment-timezone';
+import ScrollToBottom from 'react-scroll-to-bottom';
 
 
 
@@ -21,6 +21,21 @@ export const ChatPage = ({ onExit, token }) => {
     const [user, setUser] = useState({})
     const [usersOnline, setUsersOnline] = useState([])
     const [allUsers, setAllUsers] = useState([])
+
+
+
+    const sendMessage = (data) => {
+        if (data.message && data.message.length < 200) {
+            console.log('send..' , data)
+            socket.emit('message', data); 
+        } 
+    };
+
+
+
+    const muteUser = (user, prevStatus) => {
+        socket.emit('muteUser', {user, prevStatus} );
+    }
 
 
     useEffect(() => {
@@ -37,35 +52,26 @@ export const ChatPage = ({ onExit, token }) => {
         }
     }, [])
 
-    const sendMessage = (data) => {
-        if (data.message && data.message.length < 200) {
-            console.log('send..' , data)
-            socket.emit('message', data); 
-        } 
-    };
 
     useEffect(() => {
         if(socket){
             socket.on('connected', (data) => {
+                console.log(data)
                 setUser(data);
-                console.log( data , 'connected to chat...');
                 }).on('error', (e) => {
                 console.log(e)
             }); 
             socket.on('allmessages', (data) => {
                     setMessages(data)
-                    console.log( data , 'get messasges useEffect');
                     }).on('error', (e) => {
                     console.log(e)
             }); 
             socket.on('usersOnline', (data) => {
-                console.log( data , 'online');
                 setUsersOnline(data)
                 }).on('error', (e) => {
                 console.log(e)
             });  
             socket.on('allDbUsers', (data) => {
-                console.log( data , 'all users from db');
                 setAllUsers(data);
                 }).on('error', (e) => {
                 console.log(e)
@@ -77,7 +83,6 @@ export const ChatPage = ({ onExit, token }) => {
                 //     onExit();
                     
                 // } 
-
                 }).on('error', (e) => {
                 console.log(e)
             });  
@@ -90,7 +95,27 @@ export const ChatPage = ({ onExit, token }) => {
     }, [socket])
 
 
+    // const messageWrapper = (messages) => {
+    //     <ScrollToBottom >
+    //          {
+    //         messages.map((item) =>
+    //             <div 
+    //                 key={item._id}
+    //                 className={ (item.userName == user.userName)? 
+    //                 'message myMessage' :
+    //                 'message'}>
+    //                     <span>{item.userName}</span>
+    //                     <p>{item.text}</p>  
+    //                     <div>{item.createDate}</div>
+    //             </div>
+
+    //         )}
+
+    //     </ScrollToBottom>
+    // }
+
     return (
+       
         <Container maxWidth="lg">
             <Box 
             sx={{
@@ -115,23 +140,25 @@ export const ChatPage = ({ onExit, token }) => {
                         
                     }}
 >
-                        {
+{
                         messages.map((item) =>
                             <div 
                                 key={item._id}
                                 className={ (item.userName == user.userName)? 
                                 'message myMessage' :
                                 'message'}>
-                            <span>{item.userName}</span>
-                            <p>{item.text}</p>  
-                            <div>{item.createDate}</div>
+                                    <span>{item.userName}</span>
+                                    <p>{item.text}</p>  
+                                    <div>{item.createDate}</div>
                             </div>
 
                         )}
+
+                        
                     </Box>
             
                 
-                <MessageForm sendMessage = {(data) => {
+                <MessageForm data = {user} sendMessage = {(data) => {
                         sendMessage(data)
                     }}></MessageForm>
                 
@@ -143,14 +170,14 @@ export const ChatPage = ({ onExit, token }) => {
                        sx={{
                         margin:'10px 5px'
                     }}
-                    variant="contained"
+                    variant="outlined"
                     onClick={(e)=> {
                     socket.disconnect()
                     onExit()
                     }}>Logout</Button>
 
 
-                    { user.isAdmin ? 
+                    {user.isAdmin ? 
                     
                     allUsers.map((item) =>
                      <div 
@@ -160,11 +187,14 @@ export const ChatPage = ({ onExit, token }) => {
                        <div>
                            <Button
                            variant="contained"
+                           onClick={()=>{
+                            muteUser(item.userName, item.isMutted)
+                           }}
                            sx={{
                             margin:'3px',
                             height: '25px'
                         }}>
-                               mute
+                              {item.isMutted? 'unmute': 'mute'}
                            </Button>
                            <Button
                            variant="contained"
@@ -183,7 +213,6 @@ export const ChatPage = ({ onExit, token }) => {
                     }
                     </div>) 
                     :
-                    
                     usersOnline.map((item) =>
                      <div 
                         key={item._id}
@@ -196,7 +225,5 @@ export const ChatPage = ({ onExit, token }) => {
                 </Box>
             </Box>
         </Container>
-        
     )
-
 }
