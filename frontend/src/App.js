@@ -9,16 +9,24 @@ function App() {
     const [token, setToken] = useState(localStorage.getItem('token'))
 
     useEffect(() => {
-        if(token) localStorage.setItem('token', token);
+        console.log(token)
+    if(token) {
+          localStorage.setItem('token', token);  
+        } 
     }, [token])
 
 
     if (token) {
-        return <ChatPage token={token} onExit={() => setToken('')}/> 
+        return <ChatPage token={token} onExit={() =>{
+            localStorage.removeItem('token')
+            setToken('')
+        }
+             }/> 
     }
 
     return <LoginForm onSubmit={setToken}/>; // delete setTokek after unmounted
 
 }
+
 
 export default App;

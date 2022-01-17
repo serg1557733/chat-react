@@ -54,28 +54,6 @@ const isValidUserName = (userName) => {
 
 
 
-// const saveMessage = async (data, userName) => {
-//     const message = new Message({
-//         text: data.message,
-//         userName: userName,
-//         createDate: Date.now()
-//     });
-//     try {
-//         await message.save() 
-//     } catch (error) {
-//         console.log(error)   
-//     }
-// }
-
-// const getMessages = async () => {
-//     try {
-//         await message.find(); 
-//     } catch (error) {
-//         console.log(error)   
-//     }
-// }
-
-
 //get all users from db
 
 const getAllDbUsers = async (socket) => {
@@ -145,6 +123,7 @@ io.use( async (socket, next) => {
     sockets.map((sock) => {
         usersOnline.push(sock.user);
     }) 
+    
     if(!token) {
         socket.disconnect();
         return
@@ -152,15 +131,22 @@ io.use( async (socket, next) => {
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
-      //  console.log('exist', sockets)   
+        const currentUser = socket.user.userName;
+        
+        const dbUser = await User.findOne({userName: currentUser})
         const exist = sockets.find( current => current.user.userName == socket.user.userName)
-      //  sockets.map((current) => console.log(current.user.userName))
-      //  console.log('exist', exist)   
+
+        console.log('banned', exist)
 
         if(exist) {
             console.log('exist', exist)   
             exist.disconnect(); 
         } 
+        if(dbUser.isBanned){
+            socket.disconnect();
+            return
+
+        }
       
     } catch(e) {
         console.log(e)
@@ -242,6 +228,24 @@ io.on("connection", async (socket) => {
             if(exist){
                exist.emit('connected', dbUser)   
             }
+           
+           });
+    } catch (e) {
+        console.log(e)
+    }
+    try {
+        socket.on("banUser",async (data) => {
+            if(socket.user.isAdmin) { 
+                const {user, prevStatus} = data;
+                const sockets = await io.fetchSockets();
+                const ban = await User.updateOne({userName : user}, {$set: {isBanned:!prevStatus}});
+                getAllDbUsers(socket)
+                const exist = sockets.find( current => current.user.userName == user)
+                const dbUser = await User.findOne({userName : user})
+                if(exist){
+                    exist.disconnect();  
+                }}
+           
            
            });
     } catch (e) {

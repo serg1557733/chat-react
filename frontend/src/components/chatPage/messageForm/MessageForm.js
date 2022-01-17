@@ -9,10 +9,6 @@ export const MessageForm = ({sendMessage, data}) => {
 
     const [message, setMessage] = useState({message: ''});
 
-    useEffect(() => {
-        console.log('effect form data')
-    },[data.isMutted])
-
 
     return (
         <Box 

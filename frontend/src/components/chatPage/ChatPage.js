@@ -26,17 +26,18 @@ export const ChatPage = ({ onExit, token }) => {
 
     const sendMessage = (data) => {
         if (data.message && data.message.length < 200) {
-            console.log('send..' , data)
             socket.emit('message', data); 
         } 
     };
-
 
 
     const muteUser = (user, prevStatus) => {
         socket.emit('muteUser', {user, prevStatus} );
     }
 
+    const banUser = (user, prevStatus) => {
+        socket.emit('banUser', {user, prevStatus} );
+    }
 
     useEffect(() => {
         if(newtoken){
@@ -78,11 +79,11 @@ export const ChatPage = ({ onExit, token }) => {
             }); 
             socket.on('disconnect', (data) => {
                 console.log( data, 'token');
-                // if(data == 'io server disconnect') {
-                //     localStorage.removeItem('token');
-                //     onExit();
+                if(data == 'io server disconnect') {
+                    localStorage.removeItem('token');
+                    onExit();
                     
-                // } 
+                } 
                 }).on('error', (e) => {
                 console.log(e)
             });  
@@ -176,7 +177,6 @@ export const ChatPage = ({ onExit, token }) => {
                     onExit()
                     }}>Logout</Button>
 
-
                     {user.isAdmin ? 
                     
                     allUsers.map((item) =>
@@ -198,11 +198,14 @@ export const ChatPage = ({ onExit, token }) => {
                            </Button>
                            <Button
                            variant="contained"
+                           onClick={()=>{
+                            banUser(item.userName, item.isBanned)
+                           }}
                            sx={{
                             margin:'3px',
                             height: '25px'
                         }}>
-                               ban
+                              {item.isBanned? 'unban': 'ban'}
                            </Button>
                        </div>
                        {usersOnline.map( user =>{
