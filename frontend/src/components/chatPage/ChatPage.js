@@ -19,6 +19,7 @@ export const ChatPage = ({ onExit, token }) => {
     const [socket, setSocket] = useState(null);
     const [messages, setMessages] = useState([])
     const [user, setUser] = useState({})
+    const [usersOnline, setUsersOnline] = useState([])
 
      
     useEffect(() => {
@@ -58,6 +59,7 @@ export const ChatPage = ({ onExit, token }) => {
             }); 
             socket.on('usersOnline', (data) => {
                 console.log( data , 'online');
+                setUsersOnline(data)
                 }).on('error', (e) => {
                 console.log(e)
             });  
@@ -93,49 +95,71 @@ export const ChatPage = ({ onExit, token }) => {
             <Box 
             sx={{
                 display: 'flex',
-                padding: '20px'
+                height: '100vh'
             }}>
                 <Box
-                className='messageBox'
                 sx={{
                     display: 'flex',
                     flexGrow:'2',
-                    flexDirection: 'column',
-                    
+                    flexDirection: 'column',                    
                 }}
                 >
-                {
-                messages.map((item) =>
-                    <div 
-                        key={item._id}
-                        className={ (item.userName == user.userName)? 
-                        'message myMessage' :
-                         'message'}>
-                       <span>{item.userName}</span>
-                       <p>{item.text}</p>  
-                      <div>{item.createDate}</div>
-                    </div>
+                    <Box                 
+                    className='messageBox'
+                    sx={{
+                        display: 'flex',
+                        flexGrow:'2',
+                        flexDirection: 'column',
+                        overflow: 'scroll',
+                        height: '100vh'
+                        
+                    }}
+>
+                        {
+                        messages.map((item) =>
+                            <div 
+                                key={item._id}
+                                className={ (item.userName == user.userName)? 
+                                'message myMessage' :
+                                'message'}>
+                            <span>{item.userName}</span>
+                            <p>{item.text}</p>  
+                            <div>{item.createDate}</div>
+                            </div>
 
-                )}
+                        )}
+                    </Box>
+            
                 
                 <MessageForm sendMessage = {(data) => {
                         sendMessage(data)
                     }}></MessageForm>
-                <Button variant="contained"
-                            onClick={(e)=> {
-                            socket.disconnect()
-                            onExit()
-                            }}>Logout</Button>
+                
                 </Box>
                 <Box
-                    sx={{
-                    
-                        display: 'flex',
-                        flexDirection: 'column',
-                        
-                }}
+                   className='usersBox'
                 >
+                    <Button 
+                       sx={{
+                        margin:'10px 5px'
+                    }}
+                    variant="contained"
+                    onClick={(e)=> {
+                    socket.disconnect()
+                    onExit()
+                    }}>Logout</Button>
+
+
+                    {usersOnline.map((item) =>
+                     <div 
+                        key={item._id}
+                        className='online'>
+                       <div>{item.userName}</div>
+                       <span style={{color: 'red'}}>Online</span>
+                    </div>)}
+
                     
+                            
                     <Userslist></Userslist>
                  
 
