@@ -5,7 +5,7 @@ import { UserInfo } from './userInfo/UserInfo';
 import { Userslist } from './usersList/UsersList';
 import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
-import { useEffect, useState, useRef} from 'react';
+import { useEffect, useState} from 'react';
 import './chatPage.scss';
 import moment from 'moment-timezone';
 
@@ -20,8 +20,9 @@ export const ChatPage = ({ onExit, token }) => {
     const [messages, setMessages] = useState([])
     const [user, setUser] = useState({})
     const [usersOnline, setUsersOnline] = useState([])
+    const [allUsers, setAllUsers] = useState([])
 
-     
+
     useEffect(() => {
         if(newtoken){
             try {
@@ -65,6 +66,7 @@ export const ChatPage = ({ onExit, token }) => {
             });  
             socket.on('allDbUsers', (data) => {
                 console.log( data , 'all users from db');
+                setAllUsers(data);
                 }).on('error', (e) => {
                 console.log(e)
             }); 
@@ -86,8 +88,6 @@ export const ChatPage = ({ onExit, token }) => {
             });    
         }
     }, [socket])
-  
-    console.log(messages)
 
 
     return (
@@ -150,18 +150,48 @@ export const ChatPage = ({ onExit, token }) => {
                     }}>Logout</Button>
 
 
-                    {usersOnline.map((item) =>
+                    { user.isAdmin ? 
+                    
+                    allUsers.map((item) =>
                      <div 
                         key={item._id}
                         className='online'>
                        <div>{item.userName}</div>
-                       <span style={{color: 'red'}}>Online</span>
+                       <div>
+                           <Button
+                           variant="contained"
+                           sx={{
+                            margin:'3px',
+                            height: '25px'
+                        }}>
+                               mute
+                           </Button>
+                           <Button
+                           variant="contained"
+                           sx={{
+                            margin:'3px',
+                            height: '25px'
+                        }}>
+                               ban
+                           </Button>
+                       </div>
+                       {usersOnline.map( user =>{
+                        if(item.userName == user.userName){
+                           return <span style={{color: 'green'}}>online</span>
+                       }}
+                       )
+                    }
+                    </div>) 
+                    :
+                    
+                    usersOnline.map((item) =>
+                     <div 
+                        key={item._id}
+                        className='online'>  
+                       <div>{item.userName}</div>
+                       <span style={{color: 'green'}}>online</span>
                     </div>)}
 
-                    
-                            
-                    <Userslist></Userslist>
-                 
 
                 </Box>
             </Box>
