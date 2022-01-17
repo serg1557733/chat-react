@@ -7,7 +7,7 @@ import { Userslist } from './usersList/UsersList';
 import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
 import { useEffect, useState, useRef} from 'react';
-import { Moment } from 'moment-timezone';
+
 
 
 
@@ -16,6 +16,7 @@ export const ChatPage = ({ onExit, token }) => {
     const newtoken = token;
     const [socket, setSocket] = useState(null);
     const [messages, setMessages] = useState([])
+    const [user, setUser] = useState({})
 
      
     useEffect(() => {
@@ -42,6 +43,7 @@ export const ChatPage = ({ onExit, token }) => {
     useEffect(() => {
         if(socket){
             socket.on('connected', (data) => {
+                setUser(data);
                 console.log( data , 'connected to chat...');
                 }).on('error', (e) => {
                 console.log(e)
@@ -63,8 +65,13 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(e)
             }); 
             socket.on('disconnect', (data) => {
-                localStorage.clear();
                 console.log( data, 'token');
+                if(data == 'io server disconnect') {
+                    localStorage.removeItem('token');
+                    onExit();
+                    
+                } 
+
                 }).on('error', (e) => {
                 console.log(e)
             });  
@@ -94,8 +101,7 @@ export const ChatPage = ({ onExit, token }) => {
                 {messages.map((item, index) =>
                     <div key={index}>
                        <span>{item.userName}</span>
-                       <div>{item.text}</div>
-                      {item.isAdmin ?  '' : <span>admin</span>}
+                       <div>{item.text}</div>  
                       <div>{item.createDate}</div>
                     </div>
                 )}

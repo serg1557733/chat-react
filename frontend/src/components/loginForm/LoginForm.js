@@ -31,6 +31,7 @@ export const LoginForm = ({ onSubmit}) => {
         e.preventDefault();
         if(isValidPayload({...userData}) && isValidUserName({...userData})){
             const token = await sendForm(POST_URL, userData);
+            console.log(token)
             if(token){
                 onSubmit(token);     
             }

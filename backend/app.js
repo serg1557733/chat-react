@@ -37,14 +37,13 @@ const TOKEN_KEY = 'rGH4r@3DKOg06hgj';
 const HASH_KEY = 7;
 
 
-
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
         id,
         userName,
         isAdmin
     }
-    return jwt.sign(payload, TOKEN_KEY, {expiresIn: '48h'});
+    return jwt.sign(payload, TOKEN_KEY);
 
 }
 
@@ -55,18 +54,18 @@ const isValidUserName = (userName) => {
 
 
 
-const saveMessage = async (data, userName) => {
-    const message = new Message({
-        text: data.message,
-        userName: userName,
-        createDate: Date.now()
-    });
-    try {
-        await message.save() 
-    } catch (error) {
-        console.log(error)   
-    }
-}
+// const saveMessage = async (data, userName) => {
+//     const message = new Message({
+//         text: data.message,
+//         userName: userName,
+//         createDate: Date.now()
+//     });
+//     try {
+//         await message.save() 
+//     } catch (error) {
+//         console.log(error)   
+//     }
+// }
 
 // const getMessages = async () => {
 //     try {
@@ -76,12 +75,12 @@ const saveMessage = async (data, userName) => {
 //     }
 // }
 
+
 //get all users from db
 const getAllDbUsers = async (socket) => {
     const usersDb = await User.find({})
     socket.emit('allDbUsers', usersDb)
 }
-
 
 
 app.post('/login', jsonParser, async (req, res) => {
@@ -158,13 +157,11 @@ io.use( async (socket, next) => {
             exist.disconnect(); 
         } 
       
-
     } catch(e) {
         console.log(e)
         socket.disconnect();
         return
     }
-
 
     next();
 });
@@ -189,8 +186,23 @@ io.on("connection", async (socket) => {
         const userName = socket.user.userName;
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
-        if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000
-        const message = new Message({
+        console.log(post)
+        if(post){
+            if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000
+                const message = new Message({
+                        text: data.message,
+                        userName: userName,
+                        createDate: Date.now()
+                    });
+                    try {
+                        await message.save() 
+                    } catch (error) {
+                        console.log(error)   
+                    }
+                    io.emit('message', message)
+            }
+        } else {
+            const message = new Message({
                 text: data.message,
                 userName: userName,
                 createDate: Date.now()
@@ -201,7 +213,7 @@ io.on("connection", async (socket) => {
                 console.log(error)   
             }
             io.emit('message', message)
-        }
+         }
 
     });
     try {
@@ -214,12 +226,7 @@ io.on("connection", async (socket) => {
     } catch (e) {
         console.log(e)
     }
-
 });
-
-
-
-
 
 
 
