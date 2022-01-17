@@ -1,12 +1,14 @@
 import Container from '@mui/material/Container';
 import { MessageForm } from './messageForm/MessageForm';
-import { MessageList} from './messageList/MessageList';
 import Button from '@mui/material/Button';
 import { UserInfo } from './userInfo/UserInfo';
 import { Userslist } from './usersList/UsersList';
 import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
 import { useEffect, useState, useRef} from 'react';
+import './chatPage.scss';
+import moment from 'moment-timezone';
+
 
 
 
@@ -66,11 +68,11 @@ export const ChatPage = ({ onExit, token }) => {
             }); 
             socket.on('disconnect', (data) => {
                 console.log( data, 'token');
-                if(data == 'io server disconnect') {
-                    localStorage.removeItem('token');
-                    onExit();
+                // if(data == 'io server disconnect') {
+                //     localStorage.removeItem('token');
+                //     onExit();
                     
-                } 
+                // } 
 
                 }).on('error', (e) => {
                 console.log(e)
@@ -84,13 +86,17 @@ export const ChatPage = ({ onExit, token }) => {
     }, [socket])
   
     console.log(messages)
+
+
     return (
         <Container maxWidth="lg">
             <Box 
             sx={{
                 display: 'flex',
+                padding: '20px'
             }}>
                 <Box
+                className='messageBox'
                 sx={{
                     display: 'flex',
                     flexGrow:'2',
@@ -98,17 +104,28 @@ export const ChatPage = ({ onExit, token }) => {
                     
                 }}
                 >
-                {messages.map((item, index) =>
-                    <div key={index}>
+                {
+                messages.map((item) =>
+                    <div 
+                        key={item._id}
+                        className={ (item.userName == user.userName)? 
+                        'message myMessage' :
+                         'message'}>
                        <span>{item.userName}</span>
-                       <div>{item.text}</div>  
+                       <p>{item.text}</p>  
                       <div>{item.createDate}</div>
                     </div>
+
                 )}
-                    
-                    <MessageForm sendMessage = {(data) => {
+                
+                <MessageForm sendMessage = {(data) => {
                         sendMessage(data)
                     }}></MessageForm>
+                <Button variant="contained"
+                            onClick={(e)=> {
+                            socket.disconnect()
+                            onExit()
+                            }}>Logout</Button>
                 </Box>
                 <Box
                     sx={{
@@ -116,21 +133,14 @@ export const ChatPage = ({ onExit, token }) => {
                         display: 'flex',
                         flexDirection: 'column',
                         
-                    }}
+                }}
                 >
-                    <UserInfo></UserInfo>
+                    
                     <Userslist></Userslist>
-                    <Button variant="contained"
-
-                     onClick={(e)=> {
-                        socket.disconnect()
-                        onExit()
-                    }}>Logout</Button>
+                 
 
                 </Box>
-  
             </Box>
-         
         </Container>
         
     )

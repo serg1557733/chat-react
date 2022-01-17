@@ -214,7 +214,6 @@ io.on("connection", async (socket) => {
             }
             io.emit('message', message)
          }
-
     });
     try {
         socket.on("disconnect", () => {

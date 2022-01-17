@@ -1,14 +1,11 @@
-import './message.css'
+import Container from '@mui/material/Container';
 
 
 export const Message= () => {
     return (
-        <div className="message">
-            
-        </div>
+        <Container maxWidth="sx">
 
-
-        
+        </Container>
     )
 
 }
