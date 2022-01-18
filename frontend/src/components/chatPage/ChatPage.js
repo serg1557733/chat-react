@@ -2,16 +2,16 @@ import Container from '@mui/material/Container';
 import { MessageForm } from './messageForm/MessageForm';
 import Button from '@mui/material/Button';
 import { UserInfo } from './userInfo/UserInfo';
-import { Userslist } from './usersList/UsersList';
 import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
-import { useEffect, useState} from 'react';
+import { useEffect, useState, useMemo, useRef} from 'react';
 import './chatPage.scss';
-import ScrollToBottom from 'react-scroll-to-bottom';
+import Avatar from '@mui/material/Avatar';
 
 
 
 export const ChatPage = ({ onExit, token }) => {
+
 
     const newtoken = token;
     const [socket, setSocket] = useState(null);
@@ -21,7 +21,8 @@ export const ChatPage = ({ onExit, token }) => {
     const [allUsers, setAllUsers] = useState([])
 
 
-
+    const randomColor = require('randomcolor'); 
+    const endMessages = useRef(null);
     const sendMessage = (data) => {
         if (data.message && data.message.length < 200) {
             socket.emit('message', data); 
@@ -36,6 +37,16 @@ export const ChatPage = ({ onExit, token }) => {
         socket.emit('banUser', {user, prevStatus} );
     }
 
+    const dateFormat = (item) => {
+
+        const res = item.createDate.split('T');
+        const date = {
+            year : res[0],
+            time : res[1].slice(-13, -5)
+        }
+        return date;
+    }
+   
 
     useEffect(() => {
         if(newtoken){
@@ -52,6 +63,7 @@ export const ChatPage = ({ onExit, token }) => {
     }, [])
 
     useEffect(() => {
+    
         if(socket){
             socket.on('connected', (data) => {
                 setUser(data);
@@ -77,11 +89,10 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log( data, 'token');
                 if(data == 'io server disconnect') {
                     localStorage.removeItem('token');
-                    onExit();
-                    
+                    onExit(); 
                 } 
                 }).on('error', (e) => {
-                console.log(e)
+                console.log('error token', e)
             });  
             socket.on('message', (data) => {
                 setMessages((messages) => [...messages, data] )
@@ -92,24 +103,19 @@ export const ChatPage = ({ onExit, token }) => {
     }, [socket])
 
 
-    // const messageWrapper = (messages) => {
-    //     <ScrollToBottom >
-    //          {
-    //         messages.map((item) =>
-    //             <div 
-    //                 key={item._id}
-    //                 className={ (item.userName == user.userName)? 
-    //                 'message myMessage' :
-    //                 'message'}>
-    //                     <span>{item.userName}</span>
-    //                     <p>{item.text}</p>  
-    //                     <div>{item.createDate}</div>
-    //             </div>
 
-    //         )}
+    let userColor = useMemo(() => randomColor(),[socket]);
 
-    //     </ScrollToBottom>
-    // }
+    
+    console.log(endMessages);
+    const scrollToBottom = () => {
+        endMessages.current?.scrollIntoView({ behavior: "smooth" })
+      }
+    
+      useEffect(() => {
+        scrollToBottom()
+      }, [messages]);
+
 
     return (
         <Container maxWidth="lg">
@@ -135,44 +141,90 @@ export const ChatPage = ({ onExit, token }) => {
                         height: '100vh'
                         
                     }}
->
-{
+>                     
+                        {
                         messages.map((item) =>
+                        <>
+                            <Avatar sx={
+                                (item.userName == user.userName)
+                                ? 
+                                {
+                                    alignSelf: 'flex-end',
+                                    fontSize: 10,
+                                    width: '60px',
+                                    height: '60px',
+                                    color:'black',
+                                    backgroundColor: userColor
+                                }
+                                :
+                                {
+                                    backgroundColor: item.color,
+                                    fontSize: 10,
+                                    width: '60px',
+                                    height: '60px',
+                                    color:'black'
+                                  
+                                }
+                                }> 
+                                {item.userName}
+                            </Avatar>   
                             <div 
                                 key={item._id}
-                                className={ (item.userName == user.userName)? 
+                                className={ 
+                                (item.userName == user.userName)
+                                ? 
                                 'message myMessage' :
                                 'message'}>
-                                    <span>{item.userName}</span>
+                                    
                                     <p>{item.text}</p>  
-                                    <div>{item.createDate}</div>
+                                   
+                                    <div
+                                     style={{fontStyle:'italic',
+                                            color: 'grey',
+                                            fontSize: 14}}
+                                     >
+                                         {dateFormat(item).time}
+                                    </div> 
+                                    <div 
+                                    style={{fontStyle:'italic',
+                                            fontSize: 12,
+                                            color: 'grey'}}>
+                                            {dateFormat(item).year}
+                                    </div>
                             </div>
-
+                     
+                            </>
                         )}
-
+                        <div ref={endMessages}></div>
                         
                     </Box>
-            
-                        <MessageForm data = {user} sendMessage = {(data) => {
+                        <MessageForm 
+                        data = {user} 
+                        sendMessage = {(data) => {
                             sendMessage(data)
-                        }}></MessageForm>
+                        }}>
+                        </MessageForm>
                 
                     </Box>
+
                     <Box
-                        className='usersBox'
-                         >
+                        className='usersBox'>
                         <Button 
                         sx={{
                             margin:'10px 5px'
                         }}
                         variant="outlined"
                         onClick={(e)=> {
-                        socket.disconnect()
-                        onExit()
-                        }}>Logout</Button>
+                                socket.disconnect()
+                                onExit()
+                                }}>
+                        Logout</Button>
 
-                            {user.isAdmin ? 
-                            
+                        <UserInfo user={user.userName} color={userColor}/>
+                        
+
+                            {user.isAdmin 
+                            ? 
                             allUsers.map((item) =>
                             <div 
                                 key={item._id}
@@ -188,8 +240,12 @@ export const ChatPage = ({ onExit, token }) => {
                                     margin:'3px',
                                     height: '25px'
                                 }}>
-                                    {item.isMutted? 'unmute': 'mute'}
+                                {item.isMutted
+                                ? 
+                                'unmute'
+                                : 'mute'}
                                 </Button>
+
                                 <Button
                                 variant="contained"
                                 onClick={()=>{
@@ -199,24 +255,27 @@ export const ChatPage = ({ onExit, token }) => {
                                     margin:'3px',
                                     height: '25px'
                                 }}>
-                                    {item.isBanned? 'unban': 'ban'}
+                                    {item.isBanned
+                                ? 'unban'
+                                : 'ban'}
                                 </Button>
+
                             </div>
-                            {usersOnline.map( user =>{
-                                if(item.userName == user.userName){
-                                return <span style={{color: 'green'}}>online</span>
-                            }}
-                            )
+                            {
+                            usersOnline.map((user, i) =>{
+                                                if(item.userName == user.userName){
+                                                return <span key={i} style={{color: 'green'}}>online</span>
+                                            }})
                             }
                             </div>) 
                             :
                             usersOnline.map((item) =>
-                            <div 
-                                key={item._id}
-                                className='online'>  
-                            <div>{item.userName}</div>
-                            <span style={{color: 'green'}}>online</span>
-                            </div>)}
+                                <div 
+                                    key={item._id}
+                                    className='online'>  
+                                    <div style={{color: item.color}}>{item.userName}</div>
+                                    <span style={{color: 'green'}}>online</span>
+                                </div>)}
                 </Box>
             </Box>
         </Container>

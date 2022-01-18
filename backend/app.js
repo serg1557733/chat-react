@@ -15,25 +15,21 @@ const server = http.createServer(app);
 const jsonParser = express.json();
 app.use(cors());
 
-
-
 const io = require("socket.io")(server, {
     cors: {
         origin: "http://localhost:3000" //client endpoint and port
     }
 });
+const randomColor = require('randomcolor'); 
 
 const PORT = process.env.PORT || 5000;
 const TOKEN_KEY = process.env.TOKEN_KEY || 'rGH4r@3DKOg06hgj'; 
-const HASH_KEY = process.env.HASH_KEY || 7;
-
-
+const HASH_KEY = 7;
 
 //main test page
 app.get('/', (req, res) => {
     res.send('here will be login page')
 })
-
 
 const generateToken = (id, userName, isAdmin) => {
     const payload = {
@@ -63,7 +59,7 @@ app.post('/login', jsonParser, async (req, res) => {
         if (!isValidUserName(userName)){
             return res.status(400).json({message: 'Invalid username'})
         }
-        if (dbUser.isBanned){
+        if (dbUser && dbUser.isBanned){
             return res.status(401).json({message: 'Your account has been banned!!!'})
         }
 
@@ -127,41 +123,43 @@ io.use( async (socket, next) => {
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
+        socket.user.color = randomColor();
+    
 
         //was for banned users
     //  const currentUser = socket.user.userName;
     // const dbUser = await User.findOne({userName: currentUser})
-        const exist = sockets.find( current => current.user.userName == socket.user.userName)
 
-        if(exist) {
-            console.log('exist', exist)   
+        const exist = sockets.find(current => current.user.userName == socket.user.userName)
+        if(exist ) {  //&& !user.isAdmin  - add for two or more admins 
+            console.log('exist twice entering...')   
             exist.disconnect(); 
         } 
-
         // if(dbUser.isBanned){
         //     socket.disconnect();
         //     return
-        // }
-      
+        // } 
     } catch(e) {
         console.log(e)
         socket.disconnect();
         return
     }
-
     next();
 });
 
 io.on("connection", async (socket) => {
     const userName = socket.user.userName;
     const sockets = await io.fetchSockets();
-    const dbUser = await User.findOne({userName})
-    const results = [];
+
+    let dbUser = await User.findOne({userName})
+    let results = [];
+
     sockets.map((sock) => {
         results.push(sock.user);
     })  
-    io.emit('usersOnline', results) // send array online users
 
+    io.emit('usersOnline', results) // send array online users
+    
     socket.emit('connected', dbUser) //socket.user
    
 
@@ -172,6 +170,7 @@ io.on("connection", async (socket) => {
 
     socket.on("message", async (data) => {
         const userName = socket.user.userName;
+        
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
         if(post){
@@ -203,8 +202,15 @@ io.on("connection", async (socket) => {
          }
     });
     try {
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
+
+            const sockets = await io.fetchSockets();
+            const results = [];  
+            sockets.map((sock) => {
+                results.push(sock.user);
+            })      
             io.emit('usersOnline', results)
+
             console.log(`user :${socket.user.userName} , disconnected to socket`); 
            });
             console.log(`user :${socket.user.userName} , connected to socket`); 

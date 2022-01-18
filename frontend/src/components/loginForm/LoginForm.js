@@ -14,9 +14,7 @@ export const LoginForm = ({ onSubmit}) => {
     const [textModal, setTextModal] = useState('')
     const [display, setDisplay] = useState('none');
 
-
     const POST_URL = 'http://localhost:5000/login';
-
 
     const isValidPayload = ({userName, password}) => {
         return (userName.trim().length > 2 && password.trim().length > 4) 

@@ -14,16 +14,15 @@ function App() {
         } 
     }, [token])
     if (token) {
-        return <ChatPage token={token} onExit={() =>{
-            localStorage.removeItem('token')
-            setToken('')
+        return <ChatPage 
+            token={token} 
+            onExit={() =>{
+                        localStorage.removeItem('token')
+                        setToken('')
+                    }}/> 
         }
-             }/> 
-    }
-
     return <LoginForm onSubmit={setToken}/>; // delete setTokek after unmounted
 
 }
-
 
 export default App;

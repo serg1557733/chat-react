@@ -1,14 +1,15 @@
-import Container from '@mui/material/Container';
-import TextField from '@mui/material/TextField';
+import Avatar from '@mui/material/Avatar';
 
-export const UserInfo = () => {
+export const UserInfo = (user) => {
     return (
-        <Container maxWidth="xs">
- 
-        
-        
-        </Container>
-        
+        <Avatar sx={{ 
+            bgcolor: user.color,
+            width: '100px',
+            height: '100px',
+            fontSize: 14,
+            margin: '20px auto'
+    
+         }}>{user.user}</Avatar>
     )
 
 }

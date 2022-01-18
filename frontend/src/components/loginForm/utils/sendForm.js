@@ -11,6 +11,6 @@ export const sendForm = async (POST_URL, userData) => {
         return json;
 
     } catch (e) {
-        console.log('Error:'. e)
+        console.log('Error:', e)
     }
 }
