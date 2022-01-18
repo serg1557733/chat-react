@@ -30,11 +30,12 @@ export const LoginForm = ({ onSubmit}) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if(isValidPayload({...userData}) && isValidUserName({...userData})){
-            const token = await sendForm(POST_URL, userData);
+            const data = await sendForm(POST_URL, userData);
+            const token = data.token;
             if(token){
                 onSubmit(token);     
             }
-            setTextModal('Invalid credantials')
+            setTextModal(data.message)
             setDisplay('block')
             setUserdata({userName:'', password: ''});
             
@@ -53,6 +54,7 @@ export const LoginForm = ({ onSubmit}) => {
         }
     }, [])
 
+    
     return (
         <Container maxWidth="xs">
             <Box

@@ -8,9 +8,9 @@ export const sendForm = async (POST_URL, userData) => {
             }
         });
         const json = await response.json();
-        return json.token;
+        return json;
 
     } catch (e) {
-        console.log(e)
+        console.log('Error:'. e)
     }
 }

@@ -13,7 +13,7 @@ const bcrypt = require('bcrypt');
 
 const server = http.createServer(app);
 const jsonParser = express.json();
-app.use(cors()); // cors 
+app.use(cors());
 
 
 
@@ -22,19 +22,17 @@ const io = require("socket.io")(server, {
         origin: "http://localhost:3000" //client endpoint and port
     }
 });
-
-
 const PORT = process.env.PORT || 5000;
+const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
+const HASH_KEY = 7;
+
+
 
 
 //main test page
 app.get('/', (req, res) => {
     res.send('here will be login page')
 })
-
-
-const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
-const HASH_KEY = 7;
 
 
 const generateToken = (id, userName, isAdmin) => {
@@ -52,10 +50,6 @@ const isValidUserName = (userName) => {
     return (!nameRegex.test(userName) && userName.trim());
 }
 
-
-
-//get all users from db
-
 const getAllDbUsers = async (socket) => {
     const usersDb = await User.find({})
     socket.emit('allDbUsers', usersDb)
@@ -65,13 +59,15 @@ const getAllDbUsers = async (socket) => {
 app.post('/login', jsonParser, async (req, res) => {
     try {
         const {userName,password} = req.body;
-        
+        const dbUser = await User.findOne({userName})
         if (!isValidUserName(userName)){
             return res.status(400).json({message: 'Invalid username'})
         }
+        if (dbUser.isBanned){
+            return res.status(401).json({message: 'Your account has been banned!!!'})
+        }
 
         const hashPassword = await bcrypt.hash(password, HASH_KEY);
-
         const usersCount = await User.count().exec();
 
         const isFirst = !usersCount;
@@ -131,22 +127,22 @@ io.use( async (socket, next) => {
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
-        const currentUser = socket.user.userName;
+    //  const currentUser = socket.user.userName;
         
-        const dbUser = await User.findOne({userName: currentUser})
+        // const dbUser = await User.findOne({userName: currentUser})
         const exist = sockets.find( current => current.user.userName == socket.user.userName)
 
-        console.log('banned', exist)
+        // console.log('banned', exist)
 
         if(exist) {
             console.log('exist', exist)   
             exist.disconnect(); 
         } 
-        if(dbUser.isBanned){
-            socket.disconnect();
-            return
+        // if(dbUser.isBanned){
+        //     socket.disconnect();
+        //     return
 
-        }
+        // }
       
     } catch(e) {
         console.log(e)
