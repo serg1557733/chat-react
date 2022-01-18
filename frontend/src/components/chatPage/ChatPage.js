@@ -45,6 +45,7 @@ export const ChatPage = ({ onExit, token }) => {
         endMessages.current?.scrollIntoView({ behavior: "smooth" })
       }
 
+
     useEffect(() => {
         if(newtoken){
             try {
@@ -83,8 +84,9 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(e)
             }); 
             socket.on('disconnect', (data) => {
-                console.log( data, 'token');
+
                 if(data === 'io server disconnect') {
+                    socket.disconnect();//?
                    onExit(); 
                 } 
                 }).on('error', (e) => {
@@ -133,8 +135,8 @@ export const ChatPage = ({ onExit, token }) => {
                     }}
 >                     
                         {
-                        messages.map((item) =>
-                        <Fragment  >
+                        messages.map((item, i) =>
+                        <Fragment key={i} >
                             <Avatar 
                                 sx={
                                     (item.userName == user.userName)
@@ -220,46 +222,44 @@ export const ChatPage = ({ onExit, token }) => {
                         Logout</Button>
 
                         <UserInfo user={user.userName} color={userColor}/>
-                        
-                      
                             {user.isAdmin 
                             ? 
                             allUsers.map((item) =>
                             <div 
                                 key={item._id}
                                 className='online'>
-                            <div>{item.userName}</div>
-                            <div>
-                                <Button
-                                variant="contained"
-                                onClick={()=>{
-                                    muteUser(item.userName, item.isMutted)
-                                }}
-                                sx={{
-                                    margin:'3px',
-                                    height: '25px'
-                                }}>
-                                {item.isMutted
-                                ? 
-                                'unmute'
-                                : 'mute'}
-                                </Button>
+                                <div>{item.userName}</div>
+                                    <div>
+                                        <Button
+                                        variant="contained"
+                                        onClick={()=>{
+                                            muteUser(item.userName, item.isMutted)
+                                        }}
+                                        sx={{
+                                            margin:'3px',
+                                            height: '25px'
+                                        }}>
+                                        {item.isMutted
+                                        ? 
+                                        'unmute'
+                                        : 'mute'}
+                                        </Button>
 
-                                <Button
-                                variant="contained"
-                                onClick={()=>{
-                                    banUser(item.userName, item.isBanned)
-                                }}
-                                sx={{
-                                    margin:'3px',
-                                    height: '25px'
-                                }}>
-                                    {item.isBanned
-                                ? 'unban'
-                                : 'ban'}
-                                </Button>
+                                        <Button
+                                        variant="contained"
+                                        onClick={()=>{
+                                            banUser(item.userName, item.isBanned)
+                                        }}
+                                        sx={{
+                                            margin:'3px',
+                                            height: '25px'
+                                        }}>
+                                            {item.isBanned
+                                        ? 'unban'
+                                        : 'ban'}
+                                        </Button>
 
-                            </div>
+                                    </div>
                             {
                             usersOnline.map((user, i) =>{
                                                 if(item.userName == user.userName){
@@ -268,9 +268,9 @@ export const ChatPage = ({ onExit, token }) => {
                             }
                             </div>) 
                             :
-                            usersOnline.map((item) =>
+                            usersOnline.map((item, i) =>
                                 <div 
-                                    key={item._id}
+                                    key={i}
                                     className='online'>  
                                     <div style={{color: item.color}}>{item.userName}</div>
                                     <span style={{color: 'green'}}>online</span>
