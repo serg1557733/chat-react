@@ -1,17 +1,11 @@
-import Container from '@mui/material/Container';
+import { useEffect, useState, useMemo, useRef, Fragment} from 'react';
 import { MessageForm } from './messageForm/MessageForm';
-import Button from '@mui/material/Button';
+import {Button,Avatar, Box, Container} from '@mui/material';
 import { UserInfo } from './userInfo/UserInfo';
-import Box from '@mui/material/Box';
 import {io} from 'socket.io-client';
-import { useEffect, useState, useMemo, useRef} from 'react';
 import './chatPage.scss';
-import Avatar from '@mui/material/Avatar';
-
-
 
 export const ChatPage = ({ onExit, token }) => {
-
 
     const newtoken = token;
     const [socket, setSocket] = useState(null);
@@ -20,9 +14,9 @@ export const ChatPage = ({ onExit, token }) => {
     const [usersOnline, setUsersOnline] = useState([])
     const [allUsers, setAllUsers] = useState([])
 
-
     const randomColor = require('randomcolor'); 
     const endMessages = useRef(null);
+
     const sendMessage = (data) => {
         if (data.message && data.message.length < 200) {
             socket.emit('message', data); 
@@ -46,7 +40,10 @@ export const ChatPage = ({ onExit, token }) => {
         }
         return date;
     }
-   
+    
+    const scrollToBottom = () => {
+        endMessages.current?.scrollIntoView({ behavior: "smooth" })
+      }
 
     useEffect(() => {
         if(newtoken){
@@ -60,7 +57,7 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(error)
             } 
         }
-    }, [])
+    }, [newtoken]) //add newToken dependence
 
     useEffect(() => {
     
@@ -87,9 +84,8 @@ export const ChatPage = ({ onExit, token }) => {
             }); 
             socket.on('disconnect', (data) => {
                 console.log( data, 'token');
-                if(data == 'io server disconnect') {
-                    localStorage.removeItem('token');
-                    onExit(); 
+                if(data === 'io server disconnect') {
+                   onExit(); 
                 } 
                 }).on('error', (e) => {
                 console.log('error token', e)
@@ -98,25 +94,19 @@ export const ChatPage = ({ onExit, token }) => {
                 setMessages((messages) => [...messages, data] )
                 }).on('error', (e) => {
                 console.log(e)
-            });    
+            }); 
+             
         }
     }, [socket])
 
-
-
-    let userColor = useMemo(() => randomColor(),[socket]);
-
-    
-    console.log(endMessages);
-    const scrollToBottom = () => {
-        endMessages.current?.scrollIntoView({ behavior: "smooth" })
-      }
-    
-      useEffect(() => {
+    useEffect(() => {
         scrollToBottom()
       }, [messages]);
 
+    let userColor = useMemo(() => randomColor(),[socket]);//color for myavatar
 
+ 
+    
     return (
         <Container maxWidth="lg">
             <Box 
@@ -144,29 +134,35 @@ export const ChatPage = ({ onExit, token }) => {
 >                     
                         {
                         messages.map((item) =>
-                        <>
-                            <Avatar sx={
-                                (item.userName == user.userName)
-                                ? 
-                                {
-                                    alignSelf: 'flex-end',
-                                    fontSize: 10,
-                                    width: '60px',
-                                    height: '60px',
-                                    color:'black',
-                                    backgroundColor: userColor
-                                }
-                                :
-                                {
-                                    backgroundColor: item.color,
-                                    fontSize: 10,
-                                    width: '60px',
-                                    height: '60px',
-                                    color:'black'
-                                  
-                                }
-                                }> 
-                                {item.userName}
+                        <Fragment  >
+                            <Avatar 
+                                sx={
+                                    (item.userName == user.userName)
+                                    ? 
+                                    {
+                                        alignSelf: 'flex-end',
+                                        fontSize: 10,
+                                        width: '60px',
+                                        height: '60px',
+                                        color:'black',
+                                        backgroundColor: userColor
+                                    }
+                                    :
+                                    {
+                                        backgroundColor:  (usersOnline.map(current =>{
+                                            if(item.userName == current.userName ) {
+                                                return current.color
+                                            }
+                                          
+                                        } )),
+                                        fontSize: 10,
+                                        width: '60px',
+                                        height: '60px',
+                                        color:'black'
+                                    
+                                    }
+                                    }> 
+                                    {item.userName}
                             </Avatar>   
                             <div 
                                 key={item._id}
@@ -193,7 +189,7 @@ export const ChatPage = ({ onExit, token }) => {
                                     </div>
                             </div>
                      
-                            </>
+                        </Fragment>
                         )}
                         <div ref={endMessages}></div>
                         
@@ -208,7 +204,10 @@ export const ChatPage = ({ onExit, token }) => {
                     </Box>
 
                     <Box
-                        className='usersBox'>
+                        className='usersBox'
+                        sx={{
+                            overflow: 'scroll',  
+                        }}>
                         <Button 
                         sx={{
                             margin:'10px 5px'
@@ -222,7 +221,7 @@ export const ChatPage = ({ onExit, token }) => {
 
                         <UserInfo user={user.userName} color={userColor}/>
                         
-
+                      
                             {user.isAdmin 
                             ? 
                             allUsers.map((item) =>
@@ -276,6 +275,7 @@ export const ChatPage = ({ onExit, token }) => {
                                     <div style={{color: item.color}}>{item.userName}</div>
                                     <span style={{color: 'green'}}>online</span>
                                 </div>)}
+                    
                 </Box>
             </Box>
         </Container>

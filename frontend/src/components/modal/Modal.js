@@ -1,6 +1,5 @@
 import Alert from '@mui/material/Alert';
 
-
 export const Modal = ({text, propDisplay}) => {
 
     return <Alert 

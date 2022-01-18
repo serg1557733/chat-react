@@ -124,21 +124,14 @@ io.use( async (socket, next) => {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
         socket.user.color = randomColor();
-    
-
-        //was for banned users
-    //  const currentUser = socket.user.userName;
-    // const dbUser = await User.findOne({userName: currentUser})
-
         const exist = sockets.find(current => current.user.userName == socket.user.userName)
-        if(exist ) {  //&& !user.isAdmin  - add for two or more admins 
+
+        if(exist) {  //&& !user.isAdmin  - add for two or more admins 
             console.log('exist twice entering...')   
             exist.disconnect(); 
+            return // ?
         } 
-        // if(dbUser.isBanned){
-        //     socket.disconnect();
-        //     return
-        // } 
+     
     } catch(e) {
         console.log(e)
         socket.disconnect();
@@ -174,7 +167,7 @@ io.on("connection", async (socket) => {
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
         if(post){
-            if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000
+            if(((Date.now() - Date.parse(post.createDate)) > 15000)){//change later 15000
                 const message = new Message({
                         text: data.message,
                         userName: userName,
@@ -203,14 +196,12 @@ io.on("connection", async (socket) => {
     });
     try {
         socket.on("disconnect", async () => {
-
             const sockets = await io.fetchSockets();
             const results = [];  
             sockets.map((sock) => {
                 results.push(sock.user);
             })      
             io.emit('usersOnline', results)
-
             console.log(`user :${socket.user.userName} , disconnected to socket`); 
            });
             console.log(`user :${socket.user.userName} , connected to socket`); 
