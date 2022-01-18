@@ -43,7 +43,6 @@ export const LoginForm = ({ onSubmit}) => {
         } else {
             setTextModal('too short or using special symbols')
             setDisplay('block')
-            console.log('too short or using special symbols') // later do user aler
         }
         
     }
@@ -54,7 +53,7 @@ export const LoginForm = ({ onSubmit}) => {
         }
     }, [])
 
-    
+
     return (
         <Container maxWidth="xs">
             <Box

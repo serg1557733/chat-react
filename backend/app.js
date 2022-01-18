@@ -8,7 +8,7 @@ const User = require('./db/models/User');
 const Message = require('./db/models/Message');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-
+require('dotenv').config(); // add dotnv for config
 
 
 const server = http.createServer(app);
@@ -22,10 +22,10 @@ const io = require("socket.io")(server, {
         origin: "http://localhost:3000" //client endpoint and port
     }
 });
-const PORT = process.env.PORT || 5000;
-const TOKEN_KEY = 'rGH4r@3DKOg06hgj'; 
-const HASH_KEY = 7;
 
+const PORT = process.env.PORT || 5000;
+const TOKEN_KEY = process.env.TOKEN_KEY || 'rGH4r@3DKOg06hgj'; 
+const HASH_KEY = process.env.HASH_KEY || 7;
 
 
 
@@ -127,21 +127,20 @@ io.use( async (socket, next) => {
     try {
         const user = jwt.verify(token, TOKEN_KEY)
         socket.user = user;
-    //  const currentUser = socket.user.userName;
-        
-        // const dbUser = await User.findOne({userName: currentUser})
-        const exist = sockets.find( current => current.user.userName == socket.user.userName)
 
-        // console.log('banned', exist)
+        //was for banned users
+    //  const currentUser = socket.user.userName;
+    // const dbUser = await User.findOne({userName: currentUser})
+        const exist = sockets.find( current => current.user.userName == socket.user.userName)
 
         if(exist) {
             console.log('exist', exist)   
             exist.disconnect(); 
         } 
+
         // if(dbUser.isBanned){
         //     socket.disconnect();
         //     return
-
         // }
       
     } catch(e) {

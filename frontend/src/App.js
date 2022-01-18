@@ -9,13 +9,10 @@ function App() {
     const [token, setToken] = useState(localStorage.getItem('token'))
 
     useEffect(() => {
-        console.log(token)
     if(token) {
           localStorage.setItem('token', token);  
         } 
     }, [token])
-
-
     if (token) {
         return <ChatPage token={token} onExit={() =>{
             localStorage.removeItem('token')

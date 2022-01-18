@@ -11,8 +11,6 @@ import ScrollToBottom from 'react-scroll-to-bottom';
 
 
 
-
-
 export const ChatPage = ({ onExit, token }) => {
 
     const newtoken = token;
@@ -30,7 +28,6 @@ export const ChatPage = ({ onExit, token }) => {
         } 
     };
 
-
     const muteUser = (user, prevStatus) => {
         socket.emit('muteUser', {user, prevStatus} );
     }
@@ -38,6 +35,7 @@ export const ChatPage = ({ onExit, token }) => {
     const banUser = (user, prevStatus) => {
         socket.emit('banUser', {user, prevStatus} );
     }
+
 
     useEffect(() => {
         if(newtoken){
@@ -53,11 +51,9 @@ export const ChatPage = ({ onExit, token }) => {
         }
     }, [])
 
-
     useEffect(() => {
         if(socket){
             socket.on('connected', (data) => {
-                console.log(data)
                 setUser(data);
                 }).on('error', (e) => {
                 console.log(e)
@@ -116,13 +112,12 @@ export const ChatPage = ({ onExit, token }) => {
     // }
 
     return (
-       
         <Container maxWidth="lg">
             <Box 
-            sx={{
-                display: 'flex',
-                height: '100vh'
-            }}>
+                sx={{
+                    display: 'flex',
+                    height: '100vh'
+                }}>
                 <Box
                 sx={{
                     display: 'flex',
@@ -158,73 +153,70 @@ export const ChatPage = ({ onExit, token }) => {
                         
                     </Box>
             
+                        <MessageForm data = {user} sendMessage = {(data) => {
+                            sendMessage(data)
+                        }}></MessageForm>
                 
-                <MessageForm data = {user} sendMessage = {(data) => {
-                        sendMessage(data)
-                    }}></MessageForm>
-                
-                </Box>
-                <Box
-                   className='usersBox'
-                >
-                    <Button 
-                       sx={{
-                        margin:'10px 5px'
-                    }}
-                    variant="outlined"
-                    onClick={(e)=> {
-                    socket.disconnect()
-                    onExit()
-                    }}>Logout</Button>
+                    </Box>
+                    <Box
+                        className='usersBox'
+                         >
+                        <Button 
+                        sx={{
+                            margin:'10px 5px'
+                        }}
+                        variant="outlined"
+                        onClick={(e)=> {
+                        socket.disconnect()
+                        onExit()
+                        }}>Logout</Button>
 
-                    {user.isAdmin ? 
-                    
-                    allUsers.map((item) =>
-                     <div 
-                        key={item._id}
-                        className='online'>
-                       <div>{item.userName}</div>
-                       <div>
-                           <Button
-                           variant="contained"
-                           onClick={()=>{
-                            muteUser(item.userName, item.isMutted)
-                           }}
-                           sx={{
-                            margin:'3px',
-                            height: '25px'
-                        }}>
-                              {item.isMutted? 'unmute': 'mute'}
-                           </Button>
-                           <Button
-                           variant="contained"
-                           onClick={()=>{
-                            banUser(item.userName, item.isBanned)
-                           }}
-                           sx={{
-                            margin:'3px',
-                            height: '25px'
-                        }}>
-                              {item.isBanned? 'unban': 'ban'}
-                           </Button>
-                       </div>
-                       {usersOnline.map( user =>{
-                        if(item.userName == user.userName){
-                           return <span style={{color: 'green'}}>online</span>
-                       }}
-                       )
-                    }
-                    </div>) 
-                    :
-                    usersOnline.map((item) =>
-                     <div 
-                        key={item._id}
-                        className='online'>  
-                       <div>{item.userName}</div>
-                       <span style={{color: 'green'}}>online</span>
-                    </div>)}
-
-
+                            {user.isAdmin ? 
+                            
+                            allUsers.map((item) =>
+                            <div 
+                                key={item._id}
+                                className='online'>
+                            <div>{item.userName}</div>
+                            <div>
+                                <Button
+                                variant="contained"
+                                onClick={()=>{
+                                    muteUser(item.userName, item.isMutted)
+                                }}
+                                sx={{
+                                    margin:'3px',
+                                    height: '25px'
+                                }}>
+                                    {item.isMutted? 'unmute': 'mute'}
+                                </Button>
+                                <Button
+                                variant="contained"
+                                onClick={()=>{
+                                    banUser(item.userName, item.isBanned)
+                                }}
+                                sx={{
+                                    margin:'3px',
+                                    height: '25px'
+                                }}>
+                                    {item.isBanned? 'unban': 'ban'}
+                                </Button>
+                            </div>
+                            {usersOnline.map( user =>{
+                                if(item.userName == user.userName){
+                                return <span style={{color: 'green'}}>online</span>
+                            }}
+                            )
+                            }
+                            </div>) 
+                            :
+                            usersOnline.map((item) =>
+                            <div 
+                                key={item._id}
+                                className='online'>  
+                            <div>{item.userName}</div>
+                            <span style={{color: 'green'}}>online</span>
+                            </div>)}
                 </Box>
             </Box>
         </Container>
