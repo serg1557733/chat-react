@@ -5,8 +5,9 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import { useState, useEffect } from 'react';
 import { sendForm } from './utils/sendForm';
+import {isValidPayload} from './utils/validations/isValidPayload';
+import {isValidUserName} from './utils/validations/isValidUserName';
 import { Modal } from '../modal/Modal';
-
 
 export const LoginForm = ({ onSubmit}) => {
 
@@ -15,15 +16,6 @@ export const LoginForm = ({ onSubmit}) => {
     const [display, setDisplay] = useState('none');
 
     const POST_URL = 'http://localhost:5000/login';
-
-    const isValidPayload = ({userName, password}) => {
-        return (userName.trim().length > 2 && password.trim().length > 4) 
-    }
-
-    const isValidUserName = ({userName}) => {
-        const nameRegex = /[^A-Z a-z0-9]/ ;
-        return !nameRegex.test(userName);
-    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();

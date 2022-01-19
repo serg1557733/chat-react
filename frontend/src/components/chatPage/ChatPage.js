@@ -2,8 +2,13 @@ import { useEffect, useState, useMemo, useRef, Fragment} from 'react';
 import { MessageForm } from './messageForm/MessageForm';
 import {Button,Avatar, Box, Container} from '@mui/material';
 import { UserInfo } from './userInfo/UserInfo';
+import { dateFormat } from './utils/dateFormat';
 import {io} from 'socket.io-client';
 import './chatPage.scss';
+import { scrollToBottom } from './utils/scrollToBottom';
+import { banUser } from './service/banUser';
+import { muteUser } from './service/muteUser';
+import {sendMessage} from './service/sendMessage';
 
 export const ChatPage = ({ onExit, token }) => {
 
@@ -13,37 +18,8 @@ export const ChatPage = ({ onExit, token }) => {
     const [user, setUser] = useState({})
     const [usersOnline, setUsersOnline] = useState([])
     const [allUsers, setAllUsers] = useState([])
-
     const randomColor = require('randomcolor'); 
     const endMessages = useRef(null);
-
-    const sendMessage = (data) => {
-        if (data.message && data.message.length < 200) {
-            socket.emit('message', data); 
-        } 
-    };
-
-    const muteUser = (user, prevStatus) => {
-        socket.emit('muteUser', {user, prevStatus} );
-    }
-
-    const banUser = (user, prevStatus) => {
-        socket.emit('banUser', {user, prevStatus} );
-    }
-
-    const dateFormat = (item) => {
-
-        const res = item.createDate.split('T');
-        const date = {
-            year : res[0],
-            time : res[1].slice(-13, -5)
-        }
-        return date;
-    }
-    
-    const scrollToBottom = () => {
-        endMessages.current?.scrollIntoView({ behavior: "smooth" })
-      }
 
 
     useEffect(() => {
@@ -102,12 +78,11 @@ export const ChatPage = ({ onExit, token }) => {
     }, [socket])
 
     useEffect(() => {
-        scrollToBottom()
+        scrollToBottom(endMessages)
       }, [messages]);
 
     let userColor = useMemo(() => randomColor(),[socket]);//color for myavatar
 
- 
     
     return (
         <Container maxWidth="lg">
@@ -199,7 +174,7 @@ export const ChatPage = ({ onExit, token }) => {
                         <MessageForm 
                         data = {user} 
                         sendMessage = {(data) => {
-                            sendMessage(data)
+                            sendMessage(data, socket)
                         }}>
                         </MessageForm>
                 
@@ -233,7 +208,7 @@ export const ChatPage = ({ onExit, token }) => {
                                         <Button
                                         variant="contained"
                                         onClick={()=>{
-                                            muteUser(item.userName, item.isMutted)
+                                            muteUser(item.userName, item.isMutted, socket)
                                         }}
                                         sx={{
                                             margin:'3px',
@@ -248,7 +223,7 @@ export const ChatPage = ({ onExit, token }) => {
                                         <Button
                                         variant="contained"
                                         onClick={()=>{
-                                            banUser(item.userName, item.isBanned)
+                                            banUser(item.userName, item.isBanned, socket)
                                         }}
                                         sx={{
                                             margin:'3px',
