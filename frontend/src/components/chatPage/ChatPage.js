@@ -81,7 +81,7 @@ export const ChatPage = ({ onExit, token }) => {
         scrollToBottom(endMessages)
       }, [messages]);
 
-    let userColor = useMemo(() => randomColor(),[socket]);//color for myavatar
+    let userColor = useMemo(() => randomColor(),[]);//color for myavatar
 
     
     return (
@@ -147,7 +147,16 @@ export const ChatPage = ({ onExit, token }) => {
                                 (item.userName == user.userName)
                                 ? 
                                 'message myMessage' :
-                                'message'}>
+                                'message'}
+                                
+                                // style={{
+                                //     backgroundColor:  
+                                //     (usersOnline.map(current =>{
+                                //         if(item.userName !== current.userName ) {
+                                //             return current.color
+                                //         } 
+                                //     }))}}
+                                >
                                     
                                     <p>{item.text}</p>  
                                    
@@ -203,7 +212,14 @@ export const ChatPage = ({ onExit, token }) => {
                             <div 
                                 key={item._id}
                                 className='online'>
-                                <div>{item.userName}</div>
+                                <div style={
+                                    {color: (usersOnline.map(current =>{
+                                            if(item.userName == current.userName ) {
+                                                console.log(current.color)
+                                                return current.color
+                                            }
+                                          
+                                        }))}}>{item.userName}</div>
                                     <div>
                                         <Button
                                         variant="contained"

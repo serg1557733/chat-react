@@ -12,8 +12,8 @@ require('dotenv').config(); // add dotnv for config
 
 
 const server = http.createServer(app);
-const jsonParser = express.json();
 app.use(cors());
+app.use(express.json());
 
 const io = require("socket.io")(server, {
     cors: {
@@ -43,61 +43,72 @@ const generateToken = (id, userName, isAdmin) => {
 
 const isValidUserName = (userName) => {
     const nameRegex = /[^A-Za-z0-9]/ ;
-    return (!nameRegex.test(userName) && userName.trim());
+    return (!nameRegex.test(userName) && userName.trim().length > 2);
 }
 
 const getAllDbUsers = async (socket) => {
     const usersDb = await User.find({})
-    socket.emit('allDbUsers', usersDb)
+    socket.emit('allDbUsers', usersDb) 
 }
 
 
-app.post('/login', jsonParser, async (req, res) => {
+app.post('/login', async (req, res) => {
     try {
         const {userName,password} = req.body;
-        const dbUser = await User.findOne({userName})
+        
         if (!isValidUserName(userName)){
             return res.status(400).json({message: 'Invalid username'})
         }
-        if (dbUser && dbUser.isBanned){
+
+        const dbUser = await User.findOne({userName})
+
+        if (dbUser?.isBanned){
             return res.status(401).json({message: 'Your account has been banned!!!'})
         }
 
         const hashPassword = await bcrypt.hash(password, HASH_KEY);
-        const usersCount = await User.count().exec();
+        //const usersCount = await User.count().exec();
 
-        const isFirst = !usersCount;
+        //const isFirst = !usersCount;
         
-        let user;
+        // let user;
 
-        if (isFirst) { // if first create as admin
-            user = new User({
-                                userName,
-                                hashPassword,
-                                isAdmin: true,
-                                isBanned: false,
-                                isMutted: false
-                            });
-                await user.save();      
-        } 
+        // if (isFirst) { // if first create as admin
+        //     user = new User({
+        //                         userName,
+        //                         hashPassword,
+        //                         isAdmin: true,
+        //                         isBanned: false,
+        //                         isMutted: false
+        //                     });
+        //         await user.save();      
+        // } 
 
-        user = await User.findOne({userName})
+        // user = await User.findOne({userName})
 
-        if (!user) {
-            user = new User({
+        if (!dbUser) {
+            const user = new User({
                 userName,
                 hashPassword,
-                isAdmin: false,
+                isAdmin: !await User.count().exec(),
                 isBanned: false,
                 isMutted: false
             });
+
             await user.save()
+
+            return res.json({
+                token: generateToken(user.id, user.userName, user.isAdmin)
+            });
         }
-        if (!bcrypt.compareSync(password, user.hashPassword)){
+
+        if (dbUser && !bcrypt.compareSync(password, dbUser.hashPassword)){
             return res.status(400).json({message: 'Invalid credantials'})
         }
-        const token = generateToken(user._id, userName, user.isAdmin);
-        res.json({token})
+
+        res.json({
+            token:  generateToken(dbUser.id, dbUser.userName, dbUser.isAdmin)
+        })
 
     } catch (e) {
         console.log(e)
@@ -112,6 +123,7 @@ io.use( async (socket, next) => {
     const token = socket.handshake.auth.token;
     const sockets = await io.fetchSockets();
     const usersOnline = [];
+   
     sockets.map((sock) => {
         usersOnline.push(sock.user);
     }) 
@@ -120,16 +132,23 @@ io.use( async (socket, next) => {
         socket.disconnect();
         return
     }
+
     try {
-        const user = jwt.verify(token, TOKEN_KEY)
+        const user = jwt.verify(token, TOKEN_KEY);
+        userName = user.userName;
+        const currentDbUser = await User.findOne({userName});
+        if(currentDbUser.isBanned){
+            socket.disconnect();
+            return;
+        }
         socket.user = user;
         socket.user.color = randomColor();
-        const exist = sockets.find(current => current.user.userName == socket.user.userName)
+        const exist = sockets.find((current) => current.user.userName == socket.user.userName)
 
         if(exist) {  //&& !user.isAdmin  - add for two or more admins 
             console.log('exist twice entering...')   
             exist.disconnect(); 
-            return // ?
+            return;
         } 
      
     } catch(e) {
@@ -137,6 +156,7 @@ io.use( async (socket, next) => {
         socket.disconnect();
         return
     }
+
     next();
 });
 
@@ -145,29 +165,35 @@ io.on("connection", async (socket) => {
     const sockets = await io.fetchSockets();
 
     let dbUser = await User.findOne({userName})
-    let results = [];
+    // let results = [];
 
-    sockets.map((sock) => {
-        results.push(sock.user);
-    })  
+    // sockets.map((sock) => {
+    //     results.push(sock.user);
+    // })  
 
-    io.emit('usersOnline', results) // send array online users
+    io.emit('usersOnline', sockets.map((sock) => sock.user)) // send array online users
     
     socket.emit('connected', dbUser) //socket.user
    
 
-    if(socket.user.isAdmin) getAllDbUsers(socket); //sent all users from db to admin
-    const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20)
-            socket.emit('allmessages', messagesToShow.reverse()) 
-    
+    if(socket.user.isAdmin){
+         getAllDbUsers(socket); 
+    }//sent all users from db to admin
+
+    const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20);
+    socket.emit('allmessages', messagesToShow.reverse());
 
     socket.on("message", async (data) => {
         const userName = socket.user.userName;
         
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
-        if(post){
-            if(((Date.now() - Date.parse(post.createDate)) > 15000)){//change later 15000
+       
+
+        
+        if(!dbUser.isMutted && post){
+            console.log('post')
+            if(((Date.now() - Date.parse(post.createDate)) > 15000)){//change later 15000  
                 const message = new Message({
                         text: data.message,
                         userName: userName,
@@ -178,22 +204,27 @@ io.on("connection", async (socket) => {
                     } catch (error) {
                         console.log(error)   
                     }
+
                     io.emit('message', message)
             }
         } else {
-            const message = new Message({
-                text: data.message,
-                userName: userName,
-                createDate: Date.now()
-            });
-            try {
-                await message.save() 
-            } catch (error) {
-                console.log(error)   
-            }
-            io.emit('message', message)
+            // // remove code dublicate
+            // console.log('else')
+            // const message = new Message({
+            //         text: data.message,
+            //         userName: userName,
+            //         createDate: Date.now()
+            //     });
+            // try {
+            //     await message.save() 
+            // } catch (error) {
+            //     console.log(error)   
+            // }
+
+            // io.emit('message', message)
          }
     });
+
     try {
         socket.on("disconnect", async () => {
             const sockets = await io.fetchSockets();
@@ -201,7 +232,7 @@ io.on("connection", async (socket) => {
             sockets.map((sock) => {
                 results.push(sock.user);
             })      
-            io.emit('usersOnline', results)
+            io.emit('usersOnline', results)// simple code
             console.log(`user :${socket.user.userName} , disconnected to socket`); 
            });
             console.log(`user :${socket.user.userName} , connected to socket`); 
@@ -209,6 +240,7 @@ io.on("connection", async (socket) => {
     } catch (e) {
         console.log(e)
     }
+
     try {
         socket.on("muteUser",async (data) => {
             const {user, prevStatus} = data;
@@ -217,6 +249,7 @@ io.on("connection", async (socket) => {
             getAllDbUsers(socket)
             const exist = sockets.find( current => current.user.userName == user)
             const dbUser = await User.findOne({userName : user})
+
             if(exist){
                exist.emit('connected', dbUser)   
             }
@@ -237,8 +270,6 @@ io.on("connection", async (socket) => {
                 if(exist){
                     exist.disconnect();  
                 }}
-           
-           
            });
     } catch (e) {
         console.log(e)

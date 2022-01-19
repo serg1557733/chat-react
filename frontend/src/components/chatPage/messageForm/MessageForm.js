@@ -32,6 +32,13 @@ export const MessageForm = ({sendMessage, data}) => {
                         placeholder='type you message...'
                         minRows={3}
                         maxRows={4}
+                        onKeyPress={(e) => {
+                            if (e.key === "Enter")   {
+                                e.preventDefault();
+                                sendMessage(message);
+                                setMessage({message: ''});
+                            }
+                        }}
                         onChange={e => setMessage({...message, message: e.target.value})}
                         style={{
                             width: '80%',
