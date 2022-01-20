@@ -60,7 +60,6 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(e)
             }); 
             socket.on('disconnect', (data) => {
-
                 if(data === 'io server disconnect') {
                     socket.disconnect();//?
                    onExit(); 
@@ -215,7 +214,6 @@ export const ChatPage = ({ onExit, token }) => {
                                 <div style={
                                     {color: (usersOnline.map(current =>{
                                             if(item.userName == current.userName ) {
-                                                console.log(current.color)
                                                 return current.color
                                             }
                                           

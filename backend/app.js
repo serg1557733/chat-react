@@ -38,7 +38,6 @@ const generateToken = (id, userName, isAdmin) => {
         isAdmin
     }
     return jwt.sign(payload, TOKEN_KEY);
-
 }
 
 const isValidUserName = (userName) => {
@@ -49,6 +48,11 @@ const isValidUserName = (userName) => {
 const getAllDbUsers = async (socket) => {
     const usersDb = await User.find({})
     socket.emit('allDbUsers', usersDb) 
+}
+
+const getOneUser = async (userName) => {
+    const userInDb = await User.findOne({userName})
+    return userInDb
 }
 
 app.post('/login', async (req, res) => {
@@ -101,16 +105,20 @@ app.post('/login', async (req, res) => {
 io.use( async (socket, next) => {
     const token = socket.handshake.auth.token;
     const sockets = await io.fetchSockets();
-    const usersOnline = [];
+
    
-    sockets.map((sock) => {
-        usersOnline.push(sock.user);
-    }) 
-    
     if(!token) {
         socket.disconnect();
         return
     }
+
+    const usersOnline = [];
+   
+    sockets.map((sock) => {
+        console.log(sock.user.userName)
+        usersOnline.push(sock.user);
+    }) 
+
 
     try {
         const user = jwt.verify(token, TOKEN_KEY);
@@ -142,9 +150,12 @@ io.use( async (socket, next) => {
 
 io.on("connection", async (socket) => {
     const userName = socket.user.userName;
+
     const sockets = await io.fetchSockets();
 
-    let dbUser = await User.findOne({userName})
+    const dbUser = await User.findOne({userName})
+    const one = await getOneUser(userName);
+    console.log('one', one)
 
     io.emit('usersOnline', sockets.map((sock) => sock.user)) // send array online users
     
@@ -155,14 +166,17 @@ io.on("connection", async (socket) => {
     }//sent all users from db to admin
 
     const messagesToShow = await Message.find({}).sort({ 'createDate': -1 }).limit(20);
+
     socket.emit('allmessages', messagesToShow.reverse());
 
     socket.on("message", async (data) => {
+
         const userName = socket.user.userName;
         const dateNow = Date.now();
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
-        console.log('ttt', dbUser) //?
-        if(!dbUser.isMutted && post){
+        const oneUser = await getOneUser(userName);
+      
+        if(!oneUser.isMutted && post){
             if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000  
                 const message = new Message({
                         text: data.message,
@@ -204,11 +218,6 @@ io.on("connection", async (socket) => {
            });
             console.log(`user :${socket.user.userName} , connected to socket`); 
         
-    } catch (e) {
-        console.log(e);
-    }
-
-    try {
         socket.on("muteUser",async (data) => {
                 if(socket.user.isAdmin){
                     const {user, prevStatus} = data;
@@ -217,20 +226,19 @@ io.on("connection", async (socket) => {
                     getAllDbUsers(socket)
                     const exist = sockets.find( current => current.user.userName == user)
                     const dbUser = await User.findOne({userName : user})
-
                     if(exist){
-                    exist.emit('connected', dbUser)   
+                        console.log('exist mute', exist)
+                        exist.emit('connected', dbUser)   
                     } 
                 }
            });
-    } catch (e) {
-        console.log(e)
-    }
-    try {
+    
         socket.on("banUser",async (data) => {
             if(socket.user.isAdmin) { 
                 const {user, prevStatus} = data;
+
                 const sockets = await io.fetchSockets();
+
                 const ban = await User.updateOne({userName : user}, {$set: {isBanned:!prevStatus}});
                 getAllDbUsers(socket)
                 const exist = sockets.find( current => current.user.userName == user)
