@@ -12,7 +12,6 @@ import {sendMessage} from './service/sendMessage';
 
 export const ChatPage = ({ onExit, token }) => {
 
-    const newtoken = token;
     const [socket, setSocket] = useState(null);
     const [messages, setMessages] = useState([])
     const [user, setUser] = useState({})
@@ -22,18 +21,17 @@ export const ChatPage = ({ onExit, token }) => {
     const endMessages = useRef(null);
 
     useEffect(() => {
-        if(newtoken){
+        if(token){
             try {
-                const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
-                setSocket(io.connect(SERVER_URL, {
-                    auth: {token: newtoken}
-                }) )
-    
+                setSocket(io.connect( 
+                        process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', 
+                        {auth: {token}})
+                        )
             } catch (error) {
                 console.log(error)
             } 
         }
-    }, [newtoken])
+    }, [token])
 
     useEffect(() => {
     
@@ -41,12 +39,12 @@ export const ChatPage = ({ onExit, token }) => {
             socket.on('connected', (data) => {
                 setUser(data);
                 }).on('error', (e) => {
-                console.log(e)
+                console.log('On connected', e)
             }); 
             socket.on('allmessages', (data) => {
                     setMessages(data)
                     }).on('error', (e) => {
-                    console.log(e)
+                    console.log('allmessages', e)
             }); 
             socket.on('usersOnline', (data) => {
                 setUsersOnline(data)
@@ -81,7 +79,6 @@ export const ChatPage = ({ onExit, token }) => {
 
     let userColor = useMemo(() => randomColor(),[]);//color for myavatar
 
-    
     return (
         <Container maxWidth="lg">
             <Box 
@@ -94,8 +91,7 @@ export const ChatPage = ({ onExit, token }) => {
                     display: 'flex',
                     flexGrow:'2',
                     flexDirection: 'column',                    
-                }}
-                >
+                }}>
                     <Box                 
                     className='messageBox'
                     sx={{
@@ -103,10 +99,8 @@ export const ChatPage = ({ onExit, token }) => {
                         flexGrow:'2',
                         flexDirection: 'column',
                         overflow: 'scroll',
-                        height: '100vh'
-                        
-                    }}
->                     
+                        height: '100vh'  
+                    }}>                     
                         {
                         messages.map((item, i) =>
                         <Fragment key={i} >
@@ -134,7 +128,6 @@ export const ChatPage = ({ onExit, token }) => {
                                         width: '60px',
                                         height: '60px',
                                         color:'black'
-                                    
                                     }
                                     }> 
                                     {item.userName}
@@ -144,26 +137,16 @@ export const ChatPage = ({ onExit, token }) => {
                                 className={ 
                                 (item.userName == user.userName)
                                 ? 
-                                'message myMessage' :
+                                'message myMessage' 
+                                :
                                 'message'}
-                                
-                                // style={{
-                                //     backgroundColor:  
-                                //     (usersOnline.map(current =>{
-                                //         if(item.userName !== current.userName ) {
-                                //             return current.color
-                                //         } 
-                                //     }))}}
                                 >
-                                    
                                     <p>{item.text}</p>  
-                                   
                                     <div
                                      style={{fontStyle:'italic',
                                             color: 'grey',
-                                            fontSize: 14}}
-                                     >
-                                         {dateFormat(item).time}
+                                            fontSize: 14}}>
+                                            {dateFormat(item).time}
                                     </div> 
                                     <div 
                                     style={{fontStyle:'italic',
@@ -176,94 +159,100 @@ export const ChatPage = ({ onExit, token }) => {
                         </Fragment>
                         )}
                         <div ref={endMessages}></div>
-                        
-                    </Box>
-                        <MessageForm 
-                        data = {user} 
-                        sendMessage = {(data) => {
-                            sendMessage(data, socket)
-                        }}>
-                        </MessageForm>
-                
-                    </Box>
+    
+                        </Box>
+                            <MessageForm 
+                                    data = {user} 
+                                    sendMessage = {(data) => {
+                                                    sendMessage(data, socket)
+                                                }}>
+                            </MessageForm>
+                        </Box>
 
-                    <Box
+                        <Box
                         className='usersBox'
                         sx={{
                             overflow: 'scroll',  
                         }}>
                         <Button 
-                        sx={{
-                            margin:'10px 5px'
-                        }}
-                        variant="outlined"
-                        onClick={(e)=> {
-                                socket.disconnect()
-                                onExit()
-                                }}>
-                        Logout</Button>
-
-                        <UserInfo user={user.userName} color={userColor}/>
-                            {user.isAdmin 
-                            ? 
-                            allUsers.map((item) =>
-                            <div 
-                                key={item._id}
-                                className='online'>
-                                <div style={
-                                    {color: (usersOnline.map(current =>{
-                                            if(item.userName == current.userName ) {
-                                                return current.color
-                                            }
-                                          
-                                        }))}}>{item.userName}</div>
-                                    <div>
-                                        <Button
-                                        variant="contained"
-                                        onClick={()=>{
-                                            muteUser(item.userName, item.isMutted, socket)
-                                        }}
-                                        sx={{
-                                            margin:'3px',
-                                            height: '25px'
+                                sx={{margin:'10px 5px'}}
+                                variant="outlined"
+                                onClick={(e)=> {
+                                        socket.disconnect()
+                                        onExit()
                                         }}>
-                                        {item.isMutted
-                                        ? 
-                                        'unmute'
-                                        : 'mute'}
-                                        </Button>
+                                Logout
+                        </Button>
 
-                                        <Button
-                                        variant="contained"
-                                        onClick={()=>{
-                                            banUser(item.userName, item.isBanned, socket)
-                                        }}
-                                        sx={{
-                                            margin:'3px',
-                                            height: '25px'
-                                        }}>
-                                            {item.isBanned
-                                        ? 'unban'
-                                        : 'ban'}
-                                        </Button>
-
-                                    </div>
+                        <UserInfo 
+                            data = {user.userName} 
+                            color={userColor}/>
                             {
-                            usersOnline.map((user, i) =>{
-                                                if(item.userName == user.userName){
-                                                return <span key={i} style={{color: 'green'}}>online</span>
-                                            }})
-                            }
-                            </div>) 
-                            :
-                            usersOnline.map((item, i) =>
+                                user.isAdmin 
+                                ? 
+                                allUsers.map((item) =>
                                 <div 
-                                    key={i}
-                                    className='online'>  
-                                    <div style={{color: item.color}}>{item.userName}</div>
-                                    <span style={{color: 'green'}}>online</span>
-                                </div>)}
-                    
+                                    key={item._id}
+                                    className='online'>
+                                    <div style={
+                                        {color: (usersOnline.map(current =>{
+                                                if(item.userName == current.userName ) {
+                                                    return current.color
+                                                }
+                                            
+                                            }))}}>{item.userName}</div>
+                                        <div>
+                                            <Button
+                                                variant="contained"
+                                                onClick={()=>{
+                                                    muteUser(item.userName, item.isMutted, socket)
+                                                    }}
+                                                sx={{
+                                                    margin:'3px',
+                                                    height: '25px'
+                                                }}>
+                                                    {item.isMutted
+                                                    ? 
+                                                    'unmute'
+                                                    : 'mute'}
+                                            </Button>
+
+                                            <Button
+                                                variant="contained"
+                                                onClick={()=>{
+                                                    banUser(item.userName, item.isBanned, socket)
+                                                }}
+                                                sx={{
+                                                    margin:'3px',
+                                                    height: '25px'
+                                                }}>
+                                                    {item.isBanned
+                                                ? 'unban'
+                                                : 'ban'}
+                                            </Button>
+
+                                        </div>
+                                {
+                                usersOnline.map((user, i) =>{
+                                                    if(item.userName == user.userName){
+                                                    return <span key={i} style={{color: 'green'}}>online</span>
+                                                    }
+                                                })
+                                }
+                                </div>) 
+                                :
+                                usersOnline.map((item, i) =>
+                                        <div 
+                                            key={i}
+                                            className='online'>  
+                                            <div style={{color: item.color}}>
+                                                {item.userName}
+                                            </div>
+                                            <span style={{color: 'green'}}>
+                                                online
+                                            </span>
+                                        </div>)
+                            }
                 </Box>
             </Box>
         </Container>

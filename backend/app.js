@@ -137,19 +137,15 @@ io.use( async (socket, next) => {
         socket.disconnect();
         return;
     }
-
     next();
 });
 
 io.on("connection", async (socket) => {
     const userName = socket.user.userName;
-
     const sockets = await io.fetchSockets();
-
     const dbUser = await getOneUser(userName);
 
-    io.emit('usersOnline', sockets.map((sock) => sock.user)); // send array online users
-    
+    io.emit('usersOnline', sockets.map((sock) => sock.user)); // send array online users  
     socket.emit('connected', dbUser); //socket.user
    
     if(socket.user.isAdmin){
@@ -160,9 +156,7 @@ io.on("connection", async (socket) => {
 
     socket.emit('allmessages', messagesToShow.reverse());
     socket.on("message", async (data) => {
-
-        const userName = socket.user.userName;
-        const dateNow = Date.now();
+        const dateNow = Date.now(); // for correct working latest post 
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
         const oneUser = await getOneUser(userName);
       
@@ -176,7 +170,7 @@ io.on("connection", async (socket) => {
                     try {
                         await message.save(); 
                     } catch (error) {
-                        console.log(error);   
+                        console.log('Message save to db error', error);   
                     }
                     io.emit('message', message);
             }

@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 
-
 const KEY = '777'
 
 export const generateToken = (id, userName, isAdmin) => {

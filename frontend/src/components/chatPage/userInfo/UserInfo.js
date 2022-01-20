@@ -1,15 +1,14 @@
 import Avatar from '@mui/material/Avatar';
 
-export const UserInfo = (user) => {
+export const UserInfo = (data) => {
     return (
         <Avatar sx={{ 
-            bgcolor: user.color,
+            bgcolor: data.color,
             width: '100px',
             height: '100px',
             fontSize: 14,
             margin: '20px auto'
     
-         }}>{user.user}</Avatar>
+         }}>{data.user}</Avatar>
     )
-
 }
