@@ -22,7 +22,6 @@ function App() {
                     }}/> 
         }
     return <LoginForm onSubmit={setToken}/>; // delete setTokek after unmounted
-
 }
 
 export default App;

@@ -100,23 +100,25 @@ app.post('/login', async (req, res) => {
 io.use( async (socket, next) => {
     const token = socket.handshake.auth.token;
     const sockets = await io.fetchSockets();
-
+    
     if(!token) {
         socket.disconnect();
         return;
     }
 
-
+console.log('here', token)
     const usersOnline = [];
     sockets.map((sock) => {
         usersOnline.push(sock.user);
     }) 
 
-
+   
     try {
         const user = jwt.verify(token, TOKEN_KEY);
         userName = user.userName;
         const dbUser = await getOneUser(userName);
+
+ console.log('here', userName)
 
         if(dbUser.isBanned){
             socket.disconnect();
@@ -129,13 +131,10 @@ io.use( async (socket, next) => {
         if(exist) {  //&& !user.isAdmin  - add for two or more admins 
             console.log(exist.userName, 'exist twice entering...')   
             exist.disconnect(); 
-            return;
         } 
-     
     } catch(e) {
         console.log(e);
         socket.disconnect();
-        return;
     }
     next();
 });

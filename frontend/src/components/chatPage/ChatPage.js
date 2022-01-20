@@ -19,9 +19,10 @@ export const ChatPage = ({ onExit, token }) => {
     const [allUsers, setAllUsers] = useState([])
     const randomColor = require('randomcolor'); 
     const endMessages = useRef(null);
-
+   
     useEffect(() => {
         if(token){
+            
             try {
                 setSocket(io.connect( 
                         process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', 
@@ -34,7 +35,7 @@ export const ChatPage = ({ onExit, token }) => {
     }, [token])
 
     useEffect(() => {
-    
+
         if(socket){
             socket.on('connected', (data) => {
                 setUser(data);
