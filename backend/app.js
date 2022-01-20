@@ -106,7 +106,6 @@ io.use( async (socket, next) => {
         return;
     }
 
-console.log('here', token)
     const usersOnline = [];
     sockets.map((sock) => {
         usersOnline.push(sock.user);
@@ -115,10 +114,8 @@ console.log('here', token)
    
     try {
         const user = jwt.verify(token, TOKEN_KEY);
-        userName = user.userName;
+        const userName = user.userName;
         const dbUser = await getOneUser(userName);
-
- console.log('here', userName)
 
         if(dbUser.isBanned){
             socket.disconnect();
@@ -159,21 +156,29 @@ io.on("connection", async (socket) => {
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
         const oneUser = await getOneUser(userName);
       
-        if(!oneUser.isMutted && post){
-            if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000  
-                const message = new Message({
-                        text: data.message,
-                        userName: userName,
-                        createDate: Date.now()
-                    });
-                    try {
-                        await message.save(); 
-                    } catch (error) {
-                        console.log('Message save to db error', error);   
-                    }
-                    io.emit('message', message);
+        if(oneUser.isMutted || !post){
+            return;
+        }
+
+        if(((Date.now() - Date.parse(post.createDate)) < 150)){
+            return;
+        }
+
+        // if(!oneUser.isMutted && post){
+        // if(((Date.now() - Date.parse(post.createDate)) > 150)){//change later 15000  
+        const message = new Message({
+                text: data.message,
+                userName: userName,
+                createDate: Date.now()
+            });
+            try {
+                await message.save(); 
+            } catch (error) {
+                console.log('Message save to db error', error);   
             }
-        } 
+            io.emit('message', message);
+        // }
+        // } 
     });
     
     try {
@@ -185,29 +190,39 @@ io.on("connection", async (socket) => {
             console.log(`user :${socket.user.userName} , connected to socket`); 
         
         socket.on("muteUser",async (data) => {
-                if(socket.user.isAdmin){
+            if(!socket.user.isAdmin){
+                return;
+            }
+                // if(socket.user.isAdmin){
                     const {user, prevStatus} = data;
                     const sockets = await io.fetchSockets();
                     const mute = await User.updateOne({userName : user}, {$set: {isMutted :!prevStatus}});
                     getAllDbUsers(socket);
                     const exist = sockets.find( current => current.user.userName == user)
                     const dbUser = await getOneUser(user);
+                    
                     if(exist){
-                        exist.emit('connected', dbUser)   
+                        exist.emit('connected', dbUser);   
                     } 
-                }
+                // }
            });
     
         socket.on("banUser",async (data) => {
-            if(socket.user.isAdmin) { 
+            if(!socket.user.isAdmin){
+                return;
+            }
+
+            // if(socket.user.isAdmin) { 
                 const {user, prevStatus} = data;
                 const sockets = await io.fetchSockets();
                 const ban = await User.updateOne({userName : user}, {$set: {isBanned:!prevStatus}});
                 getAllDbUsers(socket)
                 const exist = sockets.find( current => current.user.userName == user)
+                
                 if(exist){
                     exist.disconnect();  
-                }}
+                }
+            // }
            });
     } catch (e) {
         console.log(e);

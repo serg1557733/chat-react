@@ -72,6 +72,11 @@ export const ChatPage = ({ onExit, token }) => {
             }); 
              
         }
+
+        // return () => {
+        //     socket.off('connected');
+        //     socket.off('allmessages');
+        // }
     }, [socket])
 
     useEffect(() => {

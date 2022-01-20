@@ -9,10 +9,11 @@ function App() {
     const [token, setToken] = useState(localStorage.getItem('token'))
 
     useEffect(() => {
-    if(token) {
-          localStorage.setItem('token', token);  
+        if(token) {
+            localStorage.setItem('token', token);  
         } 
     }, [token])
+
     if (token) {
         return <ChatPage 
             token={token} 
@@ -21,6 +22,7 @@ function App() {
                         setToken('')
                     }}/> 
         }
+
     return <LoginForm onSubmit={setToken}/>; // delete setTokek after unmounted
 }
 

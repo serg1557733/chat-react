@@ -3,8 +3,6 @@ import Button from '@mui/material/Button';
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 
-
-
 export const MessageForm = ({sendMessage, data}) => {
 
     const [message, setMessage] = useState({message: ''});
