@@ -21,11 +21,10 @@ export const ChatPage = ({ onExit, token }) => {
     const randomColor = require('randomcolor'); 
     const endMessages = useRef(null);
 
-
     useEffect(() => {
         if(newtoken){
             try {
-                const SERVER_URL = 'http://localhost:5000';
+                const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
                 setSocket(io.connect(SERVER_URL, {
                     auth: {token: newtoken}
                 }) )
@@ -34,7 +33,7 @@ export const ChatPage = ({ onExit, token }) => {
                 console.log(error)
             } 
         }
-    }, [newtoken]) //add newToken dependence
+    }, [newtoken])
 
     useEffect(() => {
     
@@ -61,7 +60,7 @@ export const ChatPage = ({ onExit, token }) => {
             }); 
             socket.on('disconnect', (data) => {
                 if(data === 'io server disconnect') {
-                    socket.disconnect();//?
+                   socket.disconnect();
                    onExit(); 
                 } 
                 }).on('error', (e) => {
