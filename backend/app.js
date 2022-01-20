@@ -51,8 +51,8 @@ const getAllDbUsers = async (socket) => {
 }
 
 const getOneUser = async (userName) => {
-    const userInDb = await User.findOne({userName})
-    return userInDb
+    const userInDb = await User.findOne({userName});
+    return userInDb;
 }
 
 app.post('/login', async (req, res) => {
@@ -63,7 +63,7 @@ app.post('/login', async (req, res) => {
             return res.status(400).json({message: 'Invalid username'})
         }
 
-        const dbUser = await User.findOne({userName})
+        const dbUser = await getOneUser(userName)
 
         if (dbUser?.isBanned){
             return res.status(401).json({message: 'Your account has been banned!!!'})
@@ -113,19 +113,16 @@ io.use( async (socket, next) => {
     }
 
     const usersOnline = [];
-   
     sockets.map((sock) => {
-        console.log(sock.user.userName)
         usersOnline.push(sock.user);
     }) 
-
 
     try {
         const user = jwt.verify(token, TOKEN_KEY);
         userName = user.userName;
-        const currentDbUser = await User.findOne({userName});
+        const dbUser = await getOneUser(userName);
 
-        if(currentDbUser.isBanned){
+        if(dbUser.isBanned){
             socket.disconnect();
             return;
         }
@@ -153,9 +150,7 @@ io.on("connection", async (socket) => {
 
     const sockets = await io.fetchSockets();
 
-    const dbUser = await User.findOne({userName})
-    const one = await getOneUser(userName);
-    console.log('one', one)
+    const dbUser = await getOneUser(userName);
 
     io.emit('usersOnline', sockets.map((sock) => sock.user)) // send array online users
     
@@ -203,19 +198,16 @@ io.on("connection", async (socket) => {
             // } catch (error) {
             //     console.log(error)   
             // }
-
             //  io.emit('message', message)
          }
     });
     
     try {
         socket.on("disconnect", async () => {
-
             const sockets = await io.fetchSockets();
-            io.emit('usersOnline', sockets.map((sock) => sock.user));// simple code
-
+            io.emit('usersOnline', sockets.map((sock) => sock.user));
             console.log(`user :${socket.user.userName} , disconnected to socket`); 
-           });
+        });
             console.log(`user :${socket.user.userName} , connected to socket`); 
         
         socket.on("muteUser",async (data) => {
@@ -223,11 +215,10 @@ io.on("connection", async (socket) => {
                     const {user, prevStatus} = data;
                     const sockets = await io.fetchSockets();
                     const mute = await User.updateOne({userName : user}, {$set: {isMutted :!prevStatus}});
-                    getAllDbUsers(socket)
+                    getAllDbUsers(socket);
                     const exist = sockets.find( current => current.user.userName == user)
-                    const dbUser = await User.findOne({userName : user})
+                    const dbUser = await getOneUser(user);
                     if(exist){
-                        console.log('exist mute', exist)
                         exist.emit('connected', dbUser)   
                     } 
                 }
@@ -236,13 +227,11 @@ io.on("connection", async (socket) => {
         socket.on("banUser",async (data) => {
             if(socket.user.isAdmin) { 
                 const {user, prevStatus} = data;
-
                 const sockets = await io.fetchSockets();
-
                 const ban = await User.updateOne({userName : user}, {$set: {isBanned:!prevStatus}});
                 getAllDbUsers(socket)
                 const exist = sockets.find( current => current.user.userName == user)
-                const dbUser = await User.findOne({userName : user})
+                const dbUser = await getOneUser(user);
                 if(exist){
                     exist.disconnect();  
                 }}
