@@ -8,26 +8,35 @@ import { sendForm } from './utils/sendForm';
 import {isValidPayload} from './utils/validations/isValidPayload';
 import {isValidUserName} from './utils/validations/isValidUserName';
 import { Modal } from '../modal/Modal';
+import { useDispatch, useSelector } from 'react-redux';
+import { storeToken, removeToken } from '../../actions/actions';
 
-export const LoginForm = ({ onSubmit}) => {
+export const LoginForm = () => {
+
+
+    const dispatch = useDispatch();
 
     const [userData, setUserdata] = useState({userName:'', password: ''});
     const [textModal, setTextModal] = useState('')
     const [display, setDisplay] = useState('none');
 
-    const POST_URL =  process.env.REACT_APP_POST_URL || 'http://localhost:5000/login';//do simple?add on handlesubmit
+    const POST_URL =  process.env.REACT_APP_POST_URL || 'http://localhost:5000/login';//add on handlesubmit
 
     const handleSubmit = async (e) => {
+
         e.preventDefault();
 
         if(isValidPayload({...userData}) && isValidUserName({...userData})){
             const data = await sendForm(POST_URL, userData);
             const token = data.token;
-
             if(token){
-                onSubmit(token);     
+                
+                localStorage.setItem('token', token); 
+                dispatch(storeToken(token))
             }
-
+            
+            console.log('LoginForm', token)
+                
             setTextModal(data.message)
             setDisplay('block')
             setUserdata({userName:'', password: ''});

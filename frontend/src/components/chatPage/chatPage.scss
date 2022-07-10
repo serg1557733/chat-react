@@ -1,4 +1,7 @@
-
+.rootContainer {
+    max-width: 90%;
+    margin: 0 auto;
+}
 
 .message {
     padding: 10px;
@@ -27,7 +30,13 @@
     display: flex;
     padding: 20px;
     border-radius: 10px;
-    background-color:rgb(243, 243, 243)
+    background-color:rgb(243, 243, 243);
+    display: flex;
+    flex-grow :2;
+    flex-direction: column;
+    overflow: scroll;
+    height: 100vh  
+    
 }
 .usersBox { 
     align-content: flex-end;

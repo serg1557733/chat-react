@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef, Fragment} from 'react';
 import { MessageForm } from './messageForm/MessageForm';
-import {Button,Avatar, Box, Container} from '@mui/material';
+import {Button,Avatar, Box} from '@mui/material';
 import { UserInfo } from './userInfo/UserInfo';
 import { dateFormat } from './utils/dateFormat';
 import {io} from 'socket.io-client';
@@ -9,9 +9,15 @@ import { scrollToBottom } from './utils/scrollToBottom';
 import { banUser } from './service/banUser';
 import { muteUser } from './service/muteUser';
 import {sendMessage} from './service/sendMessage';
+import { store } from '../../store';
 
-export const ChatPage = ({ onExit, token }) => {
 
+import { useSelector, useDispatch } from 'react-redux';
+
+
+
+export const ChatPage = ({onExit}) => {
+    
     const [socket, setSocket] = useState(null);
     const [messages, setMessages] = useState([])
     const [user, setUser] = useState({})
@@ -19,7 +25,18 @@ export const ChatPage = ({ onExit, token }) => {
     const [allUsers, setAllUsers] = useState([])
     const randomColor = require('randomcolor'); 
     const endMessages = useRef(null);
-   
+
+    
+
+    const token = localStorage.getItem('token') || store.getState();
+
+    const dispatch = useDispatch();
+
+
+
+
+    console.log('ChatPage', token)
+
     useEffect(() => {
         if(token){
             
@@ -86,7 +103,7 @@ export const ChatPage = ({ onExit, token }) => {
     let userColor = useMemo(() => randomColor(),[]);//color for myavatar
 
     return (
-        <Container maxWidth="lg">
+        <div className='rootContainer'>
             <Box 
                 sx={{
                     display: 'flex',
@@ -98,15 +115,7 @@ export const ChatPage = ({ onExit, token }) => {
                     flexGrow:'2',
                     flexDirection: 'column',                    
                 }}>
-                    <Box                 
-                    className='messageBox'
-                    sx={{
-                        display: 'flex',
-                        flexGrow:'2',
-                        flexDirection: 'column',
-                        overflow: 'scroll',
-                        height: '100vh'  
-                    }}>                     
+                    <Box className='messageBox'>                     
                         {
                         messages.map((item, i) =>
                         <Fragment key={i} >
@@ -169,9 +178,7 @@ export const ChatPage = ({ onExit, token }) => {
                         </Box>
                             <MessageForm 
                                     data = {user} 
-                                    sendMessage = {(data) => {
-                                                    sendMessage(data, socket)
-                                                }}>
+                                    sendMessage = {(data) => {sendMessage(data, socket)}}>
                             </MessageForm>
                         </Box>
 
@@ -185,6 +192,7 @@ export const ChatPage = ({ onExit, token }) => {
                                 variant="outlined"
                                 onClick={(e)=> {
                                         socket.disconnect()
+                                        //dispatch(removeToken(token))
                                         onExit()
                                         }}>
                                 Logout
@@ -261,6 +269,6 @@ export const ChatPage = ({ onExit, token }) => {
                             }
                 </Box>
             </Box>
-        </Container>
+        </div>
     )
 }

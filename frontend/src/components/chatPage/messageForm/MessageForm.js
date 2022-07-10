@@ -45,13 +45,15 @@ export const MessageForm = ({sendMessage, data}) => {
                         }}
                         /> 
                     <Button 
-                    variant="contained" 
-                    type='submit'
-                    disabled={data.isMutted}
-                    style={{
-                        width: '20%',
-                    }}
-                    >Send</Button>
+                        variant="contained" 
+                        type='submit'
+                        disabled={data.isMutted}
+                        style={{
+                            width: '20%',
+                        }}
+                    >
+                        Send
+                    </Button>
         </Box>            
     )
 

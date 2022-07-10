@@ -9,7 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.1",
     "express": "^4.17.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^4.7.0",
+    "mongoose": "^6.4.2",
+    "nodemon": "^2.0.18",
+    "randomcolor": "^0.6.2",
     "socket.io": "^4.4.1"
   }
 }

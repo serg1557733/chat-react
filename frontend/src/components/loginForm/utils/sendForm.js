@@ -1,4 +1,5 @@
 export const sendForm = async (POST_URL, userData) => {
+    console.log('sendForm')
     try {
         const response = await fetch(POST_URL, {
             method: 'POST',

@@ -10,6 +10,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config(); // add dotnv for config
 
+console.log(Message)
+
 
 const server = http.createServer(app);
 app.use(cors());
@@ -155,12 +157,12 @@ io.on("connection", async (socket) => {
         const dateNow = Date.now(); // for correct working latest post 
         const post = await Message.findOne({userName}).sort({ 'createDate': -1 })
         const oneUser = await getOneUser(userName);
-      
-        if(oneUser.isMutted || !post){
+        if(oneUser.isMutted){  //(oneUser.isMutted || !post)
             return;
         }
 
-        if(((Date.now() - Date.parse(post.createDate)) < 150)){
+        if(((Date.now() - Date.parse(post?.createDate)) < 1500)){
+            console.log((Date.now() - Date.parse(post?.createDate)))// can use to show timer near by button
             return;
         }
 
